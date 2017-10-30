@@ -1,5 +1,5 @@
 *.png
 *.fig
 *.mat
-.ipynb_checkpoints
+source/.ipynb_checkpoints/
 
