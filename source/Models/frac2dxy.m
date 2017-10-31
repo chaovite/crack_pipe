@@ -193,6 +193,16 @@ classdef frac2dxy
             nu = obj.M.nu;
             kernel = 1./(1/Kf + (1-nu)/(G*w0)./sqrt(KX.^2 + KY.^2));
         end
+        
+        function U = eval_disp_p(obj, p, xq, yq)
+            % evaluate the surface displacement a list of query points, xq, yq.
+            % p should be the same size as pressure unknowns on this crack
+            % xq, yq: [nq*1] vectors.
+            % U: [3, nq]
+            %
+                U = obj.disloc3d.eval_disp_p(p, xq, yq);
+        end
+        
 
         function E = energy_norm(obj)
             % TO DO

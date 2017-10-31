@@ -117,7 +117,7 @@ classdef disloc3dGrid
             % element for each query points.
             % This evaluation part is efficient.
             
-            % U: 3*nq.
+            % U: [3, nq]
             
             % p, pressure at the center of each fracture cell.
             N = numel(p);

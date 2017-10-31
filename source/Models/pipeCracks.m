@@ -279,6 +279,23 @@ classdef pipeCracks
                 end
             end
         end
+        
+        function U = get_disp(obj, u, xq, yq)
+            % get a surface displacement given the solution and a list of
+            % query points, xq, and yq.
+            % the total displacement is a sum of all the contribution from
+            % all the cracks.
+            names = fields(obj.cracks);
+            nq        = length(xq);
+            U          = zeros(3, nq);
+            for i = 1: length(names)
+                name = names{i};
+                indp   = obj.indu.(name).p;
+                p        = u(indp);
+                U        = U + obj.cracks.(name).eval_disp_p(p, xq, yq);
+            end
+            
+        end
     
   end
 
