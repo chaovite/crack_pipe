@@ -112,6 +112,24 @@ classdef pipeCracks
          Ae = Ae + Ae_c;
     end
     
+    function [A, Fp] = getA(obj)
+        % This method returns the A matrix and source vector for inversion
+        % in frequency domain.
+        
+        % return the source term only from the excitation from the pipe.
+        Fp = obj.Fp(:,1);
+        A = obj.Ai + obj.Ae; % the sparse part.
+        % the dense part, which gives pressure in the crack and the other
+        % fields. 
+        crack_names = fields(obj.cracks);
+        % update crack pressure.
+        for i = 1: length(crack_names)
+            name = crack_names{i};
+            indp   = obj.indu.(name).p;
+            A(indp, :) = A(indp, :) + obj.cracks.(name).M.K_t * obj.Ap.(name);
+        end
+    end
+    
     function ft = fun_integrate(obj, u, t)
         % defines the integration function ft(u, t), additional parameters are
         % parsed in through obj.
