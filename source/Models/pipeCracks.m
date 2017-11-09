@@ -240,7 +240,6 @@ classdef pipeCracks
                      fields_index.(name).vx = indall(indvx);
                      fields_index.(name).vy = indall(indvy);
                  end
-                 
         end
     
         function obj = update(obj, U)
@@ -312,8 +311,26 @@ classdef pipeCracks
                 p        = u(indp);
                 U        = U + obj.cracks.(name).eval_disp_p(p, xq, yq);
             end
-            
         end
+        
+        function Hp = get_Hp(obj, xq, yq)
+            % get the observation matrix Hp, which relates u to surface
+            % displacement.
+            Nq  = length(xq);
+            dim = obj.dimensions();
+            N    = sum(dim);
+            Hp = zeros(3*Nq, N);
+            names = fields(obj.cracks);
+            
+            for i = 1: length(names)
+                name = names{i};
+                indp   = obj.indu.(name).p;
+                Hp_i   =  obj.cracks.(name).disloc3d.get_Hp(xq, yq);
+                Hp(:, indp) = Hp_i;
+            end
+            Hp = sparse(Hp);
+        end
+        
     
   end
 

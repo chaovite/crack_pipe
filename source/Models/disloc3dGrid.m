@@ -105,6 +105,49 @@ classdef disloc3dGrid
             K_inv=inv(K);
         end
         
+        function Hp = get_Hp(obj, xq, yq)
+            % get the matrix Hp that relates the pressure to surface
+            % displacement observed at xq and yq.
+            % Hp size: [3*nq, np]
+            Hw = obj.get_Hw(xq, yq);
+            Hp = Hw*obj.K_inv;
+        end        
+
+        function Hw = get_Hw(obj, xq, yq)
+            % get the matrix Hp that relates the opening w to surface
+            % displacement observed at xq and yq.
+            % Hp size: [3*nq, nw]
+            % Hp(i, j) is the amount of displacement component i given unit
+            % dislocation at fault j.
+            
+            N = numel(obj.x); % number of fault elements.
+            Nq = numel(xq);
+            
+            w = ones(1, N);
+
+            % the dimension for each fracture cell.
+            nx = size(obj.X, 2) - 1;
+            ny = size(obj.X, 1) - 1;
+            
+            % the length and width for each fracture cell.
+            Ly = obj.L/ny;
+            Lx  = obj.W/nx;
+            Hw = zeros(Nq*3, N);
+            
+            % create fracture models:
+            mdl = [Ly*ones(1,N); Lx*ones(1,N);
+                        obj.Zm(:)'; obj.dip*ones(1,N); obj.strike*ones(1,N); 
+                        obj.Xm(:)'; obj.Ym(:)'; zeros(1,N); zeros(1,N); w];
+            
+            obs = [xq(:)'; yq(:)'; zeros(1, Nq)];
+            
+            for i = 1: N
+                [U, ~, ~, ~] = disloc3d(mdl(:, i), obs, obj.mu,obj.nu);
+                Hw(:, i)      = reshape(U, 3*Nq, 1);
+            end
+            
+        end  
+        
         function [K, K_inv] = ddm_matrix_fullspace(obj)
             % implement the elastic kernel in 3D elastic fullspace.
             

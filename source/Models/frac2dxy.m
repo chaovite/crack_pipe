@@ -202,7 +202,6 @@ classdef frac2dxy
                 U = obj.disloc3d.eval_disp_p(p, xq, yq);
         end
         
-
         function E = energy_norm(obj)
             % TO DO
             % Energy norm, E*A+A'*E
