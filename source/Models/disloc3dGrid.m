@@ -204,7 +204,7 @@ classdef disloc3dGrid
             N = numel(w);
             Nq = numel(xq);
             
-            if size(w,2) == 1
+            if size(w,1) ~= 1
                 w = w(:)';
             end
 

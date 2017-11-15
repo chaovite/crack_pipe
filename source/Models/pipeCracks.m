@@ -94,12 +94,56 @@ classdef pipeCracks
                   otherwise
                       % cracks
                       Ae = block_matrix_insert(Ae,dim,dim,idx, idx, obj.cracks.(block).Ae);
-                      Ai  = block_matrix_insert(Ai,dim,dim,idx, idx, obj.cracks.(block).Ai);
-                      Fp = block_matrix_insert(Fp,dim, ones(1, length(dim)), idx, idx, obj.cracks.(block).Fp);
+
+                      % add contribution from the stiff coupling term
+                      % Note that there's coupling term dpxy/dt = -Kt*S/w0/Z*Hinv*(d'*d)
+                      
+                      % some constants to use
+                        Hinv    = inv(obj.cracks.(block).op.p.Pxy2);
+                        dc       = obj.cracks.(block).dc;
+                        w0      = obj.cracks.(block).M.w0;
+                        Kt        = obj.cracks.(block).M.K_t;
+                    switch block
+                        case 'bt'
+                            % a crack intersect pipe at the bottom.
+                             % crack to pipe
+                             c      = obj.pipe.grd.c(1,1);
+                             rho   = obj.pipe.grd.rho(1,1);
+                             S      = obj.pipe.grd.S(1, 1);
+                             Z      = rho*c; 
+                             % pxy -> pxy, 
+                             % This term might be unstable and should be moved to the
+                             % implicit side.
+                             Ai_crack11 =  -S/w0/Z*(Kt*(Hinv*dc))*dc';
+                        otherwise
+                            strs   =strsplit(block,'_'); % interface_1 is 1.
+                            nface = str2double(strs{2});
+                            % a crack intersect pipe in the middle.
+                            % get the index of the interface
+                            % 
+                            face = obj.pipe.op.interfaces{nface};
+                            indm = face.indm;
+                            indp = face.indp;
+                            % plus:1, minus: 2
+                            Z1      = obj.pipe.grd.c(indp,indp) * obj.pipe.grd.rho(indp,indp);
+                            Z2      = obj.pipe.grd.c(indm,indm) * obj.pipe.grd.rho(indm,indm);
+                            % Note that here assumes the area doesn't jump.
+                            S        = obj.pipe.grd.S(indp, indp);  
+                            % pxy -> pxy
+                            Ai_crack11 =  -S/w0*(1/Z1+1/Z2)*(Kt*(Hinv*dc))*dc';
+                    end
+                    
+                    % add Ai_crack_11 into the matrix.
+                    dim_crack = obj.cracks.(block).dimensions();
+                    Ai_crack    = block_matrix(dim_crack, dim_crack);
+                    Ai_crack    = block_matrix_insert(Ai_crack, dim_crack, dim_crack, 1, 1, Ai_crack11);
+                    Ai  = block_matrix_insert(Ai,dim,dim,idx, idx, obj.cracks.(block).Ai + Ai_crack);
+                    Fp = block_matrix_insert(Fp,dim, ones(1, length(dim)), idx, idx, obj.cracks.(block).Fp);
               end
           end
           
-         % adding the coupling terms, all the coupling terms are explicit
+         % adding the coupling terms, other coupling terms are explicit.
+         
          % in this case.
          Ae_c =  block_matrix(dim, dim, 0);
          [Aec2p, Ap] = cracks2pipe_couple(obj.pipe, obj.cracks, dim); %explicit from crack to pipe.
@@ -330,8 +374,6 @@ classdef pipeCracks
             end
             Hp = sparse(Hp);
         end
-        
-    
   end
 
 end

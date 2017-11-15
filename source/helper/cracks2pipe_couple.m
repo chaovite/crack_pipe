@@ -104,8 +104,10 @@ for i = 1: nc
              Api_pipe11 =    -S/w0*Hinv*dc*e0';
              % pz -> pxy
              Api_pipe12 =     S/w0/Z*Hinv*dc*e0';
-             % pxy -> pxy
-             Api_crack11 =  -S/w0/Z*Hinv*(dc*dc');
+             % pxy -> pxy, 
+             % This term might be unstable and should be moved to the
+             % implicit side.
+%              Api_crack11 =  -S/w0/Z*Hinv*(dc*dc');
              % vx -> pxy
              Api_crack12 =  -Dx2;
              % vy -> pxy
@@ -131,7 +133,7 @@ for i = 1: nc
              % pz -> pxy
              Api_pipe12 =     S/w0*Hinv*dc*(e1'/Z1+e2'/Z2);
              % pxy -> pxy
-             Api_crack11 =  -S/w0*(1/Z1+1/Z2)*Hinv*(dc*dc');
+%              Api_crack11 =  -S/w0*(1/Z1+1/Z2)*Hinv*(dc*dc');
              % vx -> pxy
              Api_crack12 =  -Dx2;
              % vy -> pxy
@@ -143,7 +145,7 @@ for i = 1: nc
     % insert Api_pipe12 into Api_pipe, pz ->pxy.
     Api_pipe = block_matrix_insert(Api_pipe, npxy, dim_p, 1, 2, Api_pipe12);
     % insert Api_crack11 into Api_crack, pxy->pxy
-    Api_crack = block_matrix_insert(Api_crack, npxy, dim_f, 1, 1, Api_crack11);
+%     Api_crack = block_matrix_insert(Api_crack, npxy, dim_f, 1, 1, Api_crack11);
     % insert Api_crack12 into Api_crack, vx->pxy
     Api_crack = block_matrix_insert(Api_crack, npxy, dim_f, 1, 2, Api_crack12);
     % insert Api_crack13 into Api_crack, vy->pxy

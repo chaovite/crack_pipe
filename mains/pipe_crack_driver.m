@@ -6,7 +6,7 @@ addpath(genpath(source_dir));
 clear
 % three section pipe. [0 200], [200, 400], [400, 1000]
 Mp.name  = 'pipe';
-Mp.L         = [300, 300, 400];        % length
+Mp.L         = [100, 100, 100];        % length
 
 % radius does not vary in depth for now.
 Mp.R         = [20];                                         % radius
