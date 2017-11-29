@@ -46,36 +46,47 @@ classdef pipe1d
    end
     
     function dim = dimensions(obj)
-        % dimension for vz, pz, h.
-      if strcmp(obj.M.bc.tp.type, 'h')
+        % dimension for vz, pz, h, eta's for each material interface.
+        % eta is the moving material interface position.
+        if strcmp(obj.M.bc.tp.type, 'h')
           % moving top surface equation for h.
           % Only this one is implemented.
           dim = [obj.grd.nz, obj.grd.nz, 1];
-      else
-          dim = [obj.grd.nz, obj.grd.nz];
+          else
+              dim = [obj.grd.nz, obj.grd.nz];
+        end
+      % loop over all the material interfaces.
+      faces = obj.M.material_interfaces;
+      nfaces = length(faces);
+      for i = 1: nfaces
+        % add addition eta's for each material interface.
+          dim = [dim, 1];
       end
     end
 
-    function  [vz, pz, h] = fields(obj, u)
-%     dimension for vz, pz, h.
+    function  [vz, pz, h, etas] = fields(obj, u)
+%     dimension for vz, pz, h, etas.
         indv  = obj.indu.indv;
         indp  = obj.indu.indp;
         indh  = obj.indu.indh;
+        indetas = obj.indu.indetas;
         vz     = u(indv);
         pz     = u(indp);
         h       = u(indh);
+        etas  = u(indetas); % moving material interface position.
     end
      
     function  obj = field_index(obj)
-%     dimension for vz, pz, h.
+%     dimension for vz, pz, h, eta's
         dim   = obj.dimensions();
         obj.indu.indv  = [1:dim(1)]';
         obj.indu.indp  = [(dim(1)+1): sum(dim(1:2))]';
-        obj.indu.indh  = sum(dim);
+        obj.indu.indh  = sum(dim(1:2)) + 1;
+        obj.indu.indetas  = [sum(dim(1:2)) + 2: sum(dim)]';
     end
      
     function [Ai, Ae, Fp] = build(obj)
-        % build part of the matrix that needs to be integrated implicitly.
+        
         dim  = obj.dimensions();
         nz    = obj.grd.nz; % grid points for 
         rho    = obj.grd.rho;
@@ -87,22 +98,31 @@ classdef pipe1d
         S       = obj.grd.S;
         Si      = inv(S);
         alpha = 8*obj.grd.mu*inv(obj.grd.R.^2);
+        % build part of the matrix that needs to be integrated implicitly Ai.
         Ai11 = -alpha*rhoi;
         Ai = block_matrix(dim, dim, 0);
         Ai = block_matrix_insert(Ai, dim, dim, 1, 1, Ai11);
         
         % Ae is the PDE part of the operators.
-        Ae11 = sparse(dim(1), dim(1));
-        Ae12 = - rhoi*Dz - g*Ki;
-        Ae13 = sparse(dim(1), dim(3));
-        Ae21 = - K*Dz + rho*g;
-        Ae22 = sparse(dim(2), dim(2));
-        Ae23 = sparse(dim(2), dim(3));
-        Ae31 = sparse(dim(3), dim(1));
-        Ae32 = sparse(dim(3), dim(2));
-        Ae33 = sparse(dim(3), dim(3));
         
-        % build interface material interface conditions into Ae.
+        % save each block of Ae into a cell array. Ae_cell.
+        % this treatment is to simplify the code when inserting block
+        % matrices.
+        Ae = block_matrix(dim, dim, 0);
+        Ae_cell = cell(length(dim), length(dim));
+        
+        for i = 1:length(dim)
+            for j = 1: length(dim)
+                Ae_cell{i, j} = sparse(dim(i), dim(j));
+            end
+        end
+        
+        Ae_cell{1,2} = - rhoi*Dz - g*Ki;
+        Ae_cell{2,1} = - K*Dz + rho*g;
+        
+        idx_block = 3;
+        
+        % build interface sconditions into Ae.
          for i = 1: length(obj.op.interfaces)
                 face = obj.op.interfaces{i};
                 type = face.type;
@@ -111,28 +131,55 @@ classdef pipe1d
                 e2   =  face.em; % minus
                 indp = face.indp;
                 indm = face.indm;
-                Z1    = obj.grd.rho(indp, indp) * obj.grd.c(indp, indp);% plus impedance
-                Z2   = obj.grd.rho(indm, indm) * obj.grd.c(indm, indm);% minus impedance
+                rho1 = obj.grd.rho(indp, indp);
+                c1    = obj.grd.c(indp, indp);
+                rho2 = obj.grd.rho(indm, indm);
+                c2    = obj.grd.c(indm, indm);
+                Z1    = rho1*c1;% plus impedance
+                Z2    = rho2*c2;% minus impedance
+                
                 SAT1= face.SATp;
                 SAT2= face.SATm;
                 switch type 
                     case 'm'
                         % add terms related to material interfaces.
-                        % these terms don't involve any coupling to the cracks.
-                        Ae11 = Ae11- SAT1*Z2/(Z1+Z2)*e1*(e1' - e2')  ...
-                                    - SAT2* Z1/(Z1+Z2)*e2*(e1' - e2');
-
-                        Ae12 = Ae12+ 1/(Z1+Z2)*(SAT1*e1*(e2' - e1') + SAT2*e2*(e2' - e1'));
-                        Ae22 = Ae22  - SAT1*Z1/(Z1+Z2)*(e1*(e1'-e2')) ...
+                        % block index of this material interface.
+                        % vz, pz, h, eta1, eta2, eta3 ...
+                        % idx_block start from 4 and increment by one after
+                        % each material interface is processed.
+                        
+                        idx_block = idx_block + 1; 
+                        % vz <-- vz
+                        Ae_cell{1,1} = Ae_cell{1,1} - SAT1*Z2/(Z1+Z2)*e1*(e1' - e2')  ...
+                                    + SAT2* Z1/(Z1+Z2)*e2*(e1' - e2');
+                        % vz <-- pz
+                        Ae_cell{1,2} = Ae_cell{1,2}+ 1/(Z1+Z2)*(SAT1*e1*(e2' - e1') + SAT2*e2*(e2' - e1'));
+                        % pz <-- pz
+                        Ae_cell{2,2} = Ae_cell{2,2}  - SAT1*Z1/(Z1+Z2)*(e1*(e1'-e2')) ...
                                     + SAT2*Z2/(Z1+Z2)*(e2*(e1'-e2'));
-                        Ae21 = Ae21 - Z1*Z2/(Z1+Z2)*(SAT1*e1*(e1' - e2') + SAT2*e2*(e1' - e2'));
+                        % pz <-- vz
+                        Ae_cell{2,1} = Ae_cell{2,1} - Z1*Z2/(Z1+Z2)*(SAT1*e1*(e1' - e2') + SAT2*e2*(e1' - e2'));
+                        
+                        % vz  <-- eta
+                        Ae_cell{1, idx_block} =  Ae_cell{1, idx_block} + (rho1-rho2)*g/(Z1+Z2)*(SAT1*e1 + SAT2*e2);
+                        % pz  <-- eta
+                        Ae_cell{2, idx_block} =  Ae_cell{2, idx_block} + (rho1-rho2)*g/(Z1+Z2)*(SAT1*Z1*e1 - SAT2*Z2*e2);
+                        
+                        % eta <-- eta
+                        Ae_cell{idx_block, idx_block} =  Ae_cell{idx_block, idx_block} + (rho1-rho2)*g/(Z1+Z2);
+                        % kinematic condition for eta.
+                        % eta <-- vz
+                        Ae_cell{idx_block, 1} =  Ae_cell{idx_block, 1} + 1/(Z1+Z2)*(Z1*e1' + Z2*e2');
+                        % eta <-- pz
+                        Ae_cell{idx_block, 2} =  Ae_cell{idx_block, 2} + 1/(Z1+Z2)*(-e1' + e2');
                     case 'c'
                         % add terms contributed by from pipe unknowns.
-                        Ae12 = Ae12 + 1/(Z1*Z2)*(Z1*SAT2*(e2*e2') - Z2*SAT1*(e1*e1'));
-                        Ae22 = Ae22 - SAT1*(e1*e1') - SAT2*(e2*e2');
+                        % coupling with crack doesn't introduce additional
+                        % unknown to the pipe.
+                        Ae_cell{1,2} = Ae_cell{1,2} + 1/(Z1*Z2)*(Z1*SAT2*(e2*e2') - Z2*SAT1*(e1*e1'));
+                        Ae_cell{2,2} = Ae_cell{2,2} - SAT1*(e1*e1') - SAT2*(e2*e2');
                     otherwise
                 end
-                        
          end
          
          % Note that, if the interface is coupled to the crack, additional
@@ -149,17 +196,17 @@ classdef pipe1d
          switch type
              case 'v'
                  % v0 = 0
-                 Ae11 = Ae11 - SAT*(e*e');
-                 Ae21 = Ae21 - SAT*Z*(e*e');
+                 Ae_cell{1,1} = Ae_cell{1,1} - SAT*(e*e');
+                 Ae_cell{2,1} = Ae_cell{2,1} - SAT*Z*(e*e');
              case 'p'
                  % p0 = 0
-                 Ae22 = Ae22 - SAT*(e*e');
-                 Ae12 = Ae12 - SAT/Z*(e*e');
+                 Ae_cell{2,2} = Ae_cell{2,2} - SAT*(e*e');
+                 Ae_cell{1,2} = Ae_cell{1,2} - SAT/Z*(e*e');
              case 'c'
                  % for crack bottom, build in the contribution from pipe
                  % pressures.
-                 Ae22 = Ae22 - SAT*(e*e');
-                 Ae12 = Ae12 - SAT/Z*(e*e');
+                 Ae_cell{2,2} = Ae_cell{2,2} - SAT*(e*e');
+                 Ae_cell{1,2} = Ae_cell{1,2} - SAT/Z*(e*e');
          end
          
          % compute the source term vector from surface excitation.
@@ -170,18 +217,28 @@ classdef pipe1d
          rho_g = obj.grd.rho(end, end)*obj.M.g;
          
          % top moving surface.
-         Ae12 = Ae12 + SAT/Z*(e*e');
-         Ae13 = Ae13 - SAT/Z*rho_g*e;
+         Fp = block_matrix(dim, 1, 0);
+         Ae_cell{1,2} =  Ae_cell{1,2} + SAT/Z*(e*e');
+         Ae_cell{1,3} =  Ae_cell{1,3} - SAT/Z*rho_g*e;
          Fp1    = -SAT/Z*e;
-         Ae22 = Ae22 - SAT*(e*e');
-         Ae23 = Ae23 + SAT*rho_g*e;
+         Ae_cell{2,2} = Ae_cell{2,2} - SAT*(e*e');
+         Ae_cell{2,3} = Ae_cell{2,3} + SAT*rho_g*e;
          Fp2    = SAT*e;
-         Ae31  = Ae31 + e';
-         Ae32  = Ae32 + e'/Z;
-         Ae33  = Ae33 - rho_g/Z;
+         Ae_cell{3,1}  = Ae_cell{3,1} + e';
+         Ae_cell{3,2}  = Ae_cell{3,2} + e'/Z;
+         Ae_cell{3,3}  = Ae_cell{3,3} - rho_g/Z;
          Fp3    = 1/Z;
-         Ae = [Ae11, Ae12, Ae13; Ae21, Ae22, Ae23; Ae31, Ae32, Ae33];
-         Fp = [Fp1; Fp2; Fp3];
+         
+         % insert Ae_cell into Ae, not good practice but okay for 1D problem.
+         for i = 1: length(dim)
+             for j=1: length(dim)
+                 Ae = block_matrix_insert(Ae, dim, dim, i, j, Ae_cell{i, j});
+             end
+         end
+         % source term only for top bc.
+         Fp = block_matrix_insert(Fp, dim, 1, 1, 1, Fp1);
+         Fp = block_matrix_insert(Fp, dim, 1, 2, 1, Fp2);
+         Fp = block_matrix_insert(Fp, dim, 1, 3, 1, Fp3);
     end
     
         function [cmax, hmin] = getCFL(obj)
@@ -191,19 +248,7 @@ classdef pipe1d
         end
     
     function [du]= fun_integrate(obj, u, t)
-        % a function to incorporate update from interfaces and boundary condition.
-        % crack_pressure a structure that contains crack pressure from each coupling cracks.
-        % For example, 
-        %           crack_pressure.interface_1 = pc means the crack
-        %           pressure at interface_1 is pc.
-        %
-        % du is the explicit update.
-        % Qc is the volumetric flow rate from the conduit into the crack, a structure.
-        % For example:      
-        %               Qc.interface_1 = qc means rate of qc leaks out of
-        %               pipe into a crack through interface_1.
-        
-        % update from PDE
+        % a function for integrating the explicit
         du    =  obj.Ae*u + obj.Fp*obj.op.bc.tp.f(t);
     end
     end

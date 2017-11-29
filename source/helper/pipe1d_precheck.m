@@ -69,6 +69,7 @@ end
 fprintf('%d interfaces defined. \n', n_int);
 
 M.crack_interfaces = {};% collect all the crack interfaces.
+M.material_interfaces = {};% collect all the material interfaces.
 
 % check each interface condition
 for i = 1: n_int
@@ -93,6 +94,7 @@ for i = 1: n_int
             fprintf('Interface %d is linked to ''%s'' \n', i, int_f.link);
         case 'm'
             fprintf('Interface %d is a material property jump interface \n', i);
+            M.material_interfaces = [M.material_interfaces; M.interfaces{i}];
         otherwise
             check = false;
             warning('Interface %d is not a valid interface type (either ''c'' or ''m'') \n');
@@ -162,6 +164,12 @@ switch type
         return
 end
 %% print out all the crack interface
+fprintf('%d material interfaces are defined:  ', length(M.material_interfaces));
+for i = 1: length(M.material_interfaces)
+    fprintf(' ''%s'' ', M.material_interfaces{i}.name);
+end
+fprintf('\n')
+
 fprintf('%d crack interfaces are defined:  ', length(M.crack_interfaces));
 for i = 1: length(M.crack_interfaces)
     fprintf(' ''%s'' ', M.crack_interfaces{i}.name);
