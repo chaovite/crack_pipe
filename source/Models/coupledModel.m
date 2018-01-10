@@ -168,6 +168,20 @@ classdef coupledModel
          A   = Ae + Ai;
     end
     
+    function Hp = get_Hp(obj, xq, yq)
+        % get the observation matrix.
+            Nq  = length(xq);
+            dim = obj.dimensions();
+            dim_c = obj.conduit.dimensions();
+            dim_f  = obj.frac.dimensions(); 
+            N    = sum(dim);
+            Hp = zeros(3*Nq, N);
+            Hp_i = obj.frac.disloc3d.get_Hp(xq, yq);
+            indp  = sum(dim_c) + [1: dim_f(1)]';
+            Hp(:, indp) = Hp_i;
+            Hp = sparse(Hp);
+    end
+    
     function obj = update(obj,U)
        obj.u = U;
        obj.conduit = obj.conduit.update(obj.field(U,1));
