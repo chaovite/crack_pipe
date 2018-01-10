@@ -8,15 +8,29 @@ function [Ai, Ae, Fp, SAT] = discretize_conduit_no_ex(geom, op, M, dim)
 nz = geom.nz;
 nr = geom.nr;
 
-rho = spdiags(M.rho,0,nz,nz);
-c   = spdiags(M.c  ,0,nz,nz);
-K   = spdiags(M.K  ,0,nz,nz);
+if length(M.rho)>1
+    rho = spdiags(M.rho,0,nz,nz);
+else
+    rho =spdiags(M.rho*ones(nz,1),0,nz,nz);
+end
+
+if length(M.c)>1
+    c = spdiags(M.c,0,nz,nz);
+else
+    c = spdiags(M.c*ones(nz,1), 0,nz,nz);
+end
+
+if length(M.K)>1
+    K = spdiags(M.K,0,nz,nz);
+else
+    K = spdiags(M.K*ones(nz,1), 0,nz,nz);
+end
 
 % SAT penalties
 SAT = [M.c(1)*op.Pz_inv(1, 1) M.c(end, end)*op.Pz_inv(end)]; % penalty relaxation rate
 %SAT = [0 0]; % no SAT boundary conditions
 
-rho_inv = spdiags(1./M.rho,0,nz,nz);
+rho_inv = inv(rho);
 %% construct matrix A by parts
 Ai = block_matrix(dim,dim);
 er = op.er;

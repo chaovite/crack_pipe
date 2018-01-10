@@ -44,7 +44,7 @@ classdef frac2dxy
             [obj.grd, obj.op] = grids_frac2dxy(M.nx, M.ny, M.Lx, M.Ly, M.order);
             obj.indu = fields_index(obj);
 %             tic;
-            disp('creating dislocation model....');
+%             disp('creating dislocation model....');
             if M.isrigid
                 M.K_t      = M.K;
             else
