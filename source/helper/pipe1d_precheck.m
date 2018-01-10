@@ -2,14 +2,18 @@ function [check, M]= pipe1d_precheck(M)
 % Pre check that M valid structure for pipe1d model.
 %
 
-fprintf('------------------check pipe input----------------------\n');
-fprintf('pipe name: ''%s'' \n', M.name);
+verbose = isfield(M,'verbose') && M.verbose;
+
+if verbose
+    fprintf('------------------check pipe input----------------------\n');
+    fprintf('pipe name: ''%s'' \n', M.name);
+end
 
 check = true;
 
 % check geometry and material properties have same dimension.
 N  =  [length(M.L), length(M.R), length(M.rho), length(M.c),...
-                               length(M.mu), length(M.S), length(length(M.K))];
+    length(M.mu), length(M.S), length(length(M.K))];
 
 % M.nz must have the same dimension as M.L, which is the grid points at
 % each section.
@@ -34,7 +38,9 @@ for i = 2: length(N)
 end
 
 nL = length(M.L);
-fprintf('%d pipe sections defined. \n', nL);
+if verbose
+    fprintf('%d pipe sections defined. \n', nL);
+end
 
 % check number of grid points in each section.
 switch M.order
@@ -66,7 +72,9 @@ if n_int ~= nL - 1
     return
 end
 
-fprintf('%d interfaces defined. \n', n_int);
+if verbose
+    fprintf('%d interfaces defined. \n', n_int);
+end
 
 M.crack_interfaces = {};% collect all the crack interfaces.
 M.material_interfaces = {};% collect all the material interfaces.
@@ -78,7 +86,9 @@ for i = 1: n_int
     
     % if the interface doesn't have name give it to a default name.
     if ~isfield(int_f, 'name')
-        fprintf('Interface %d miss a name, set name to ''interface %d'' \n', i, i);
+        if verbose
+            fprintf('Interface %d miss a name, set name to ''interface %d'' \n', i, i);
+        end
         M.interfaces{i}.name = ['interface_',num2str(i)];
     end
     
@@ -91,9 +101,13 @@ for i = 1: n_int
                 return
             end
             M.crack_interfaces = [M.crack_interfaces; M.interfaces{i}];
-            fprintf('Interface %d is linked to ''%s'' \n', i, int_f.link);
+            if verbose
+                fprintf('Interface %d is linked to ''%s'' \n', i, int_f.link);
+            end
         case 'm'
-            fprintf('Interface %d is a material property jump interface \n', i);
+            if verbose
+                fprintf('Interface %d is a material property jump interface \n', i);
+            end
             M.material_interfaces = [M.material_interfaces; M.interfaces{i}];
         otherwise
             check = false;
@@ -128,52 +142,63 @@ end
 % end
 
 % right now the top is only implemented with moving h boundary condition.
-type = tp.type; 
+type = tp.type;
 
 switch type
     case 'h' % moving surface boundary condition.
-        fprintf('Top b.c. : moving height \n');
+        msg = 'moving height \n';
     case 'v' % velocity bc
-        fprintf('Top b.c. : velocity b.c.\n');
+        msg='velocity b.c.\n';
     case 'p' % pressure bc
-        fprintf('Top b.c. : pressure b.c. \n');
-    otherwise 
+        msg='pressure b.c.\n';
+    otherwise
         check=false;
         warning('Invalid top b.c. type');
         return
 end
 
+if verbose
+    fprintf(['Top b.c. : ', msg]);
+end
+
 % bottom boundary condition.
-type = bt.type; 
+type = bt.type;
 switch type
     case 'c' % crack boundary condition.
-            if ~isfield(bt, 'link') || isempty(bt.link)
-                check = false;
-                warning('No crack name for the link of crack bottom b.c. \n');
-                return
-            end
-            M.crack_interfaces = [M.crack_interfaces; M.bc.bt];
-            fprintf('Bottom b.c.: linked to ''%s'' \n', bt.link);
+        if ~isfield(bt, 'link') || isempty(bt.link)
+            check = false;
+            warning('No crack name for the link of crack bottom b.c. \n');
+            return
+        end
+        M.crack_interfaces = [M.crack_interfaces; M.bc.bt];
+        msg= sprintf('linked to ''%s'' \n', bt.link);
     case 'v' % velocity bc
-        fprintf('Bottom b.c. : velocity b.c.\n');
+        msg='velocity b.c. \n';
     case 'p' % pressure bc
-        fprintf('Bottom b.c. : pressure b.c. \n');
+        msg='pressure b.c. \n';
     otherwise
         check = false;
         warning('Invalid bottom b.c. type');
         return
 end
-%% print out all the crack interface
-fprintf('%d material interfaces are defined:  ', length(M.material_interfaces));
-for i = 1: length(M.material_interfaces)
-    fprintf(' ''%s'' ', M.material_interfaces{i}.name);
-end
-fprintf('\n')
 
-fprintf('%d crack interfaces are defined:  ', length(M.crack_interfaces));
-for i = 1: length(M.crack_interfaces)
-    fprintf(' ''%s'' ', M.crack_interfaces{i}.name);
+if verbose
+    fprintf(['Bottom b.c. : ', msg]);
 end
-fprintf('\n')
+
+%% print out all the crack interface
+if verbose
+    fprintf('%d material interfaces are defined:  ', length(M.material_interfaces));
+    for i = 1: length(M.material_interfaces)
+        fprintf(' ''%s'' ', M.material_interfaces{i}.name);
+    end
+    fprintf('\n')
+    
+    fprintf('%d crack interfaces are defined:  ', length(M.crack_interfaces));
+    for i = 1: length(M.crack_interfaces)
+        fprintf(' ''%s'' ', M.crack_interfaces{i}.name);
+    end
+    fprintf('\n')
+end
 end
 
