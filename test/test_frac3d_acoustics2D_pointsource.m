@@ -32,7 +32,7 @@ Mf.c    = 1;
 Mf.K    = Mf.rho*Mf.c^2;
 Mf.mu = 0;
 %% construct coupled models.
-Model = frac3d(Mf);
+Model = frac3d_o(Mf);
 %% time stepping:
 CFL = 0.25;
 skip = 10;

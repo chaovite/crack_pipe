@@ -54,11 +54,11 @@ for i_order = 1:length(order)
         Mf.Gs   = Mf.cs^2*Mf.rhos;
         Mf.nu  = ((Mf.cp/Mf.cs)^2-2)/((Mf.cp/Mf.cs)^2-1)/2;
         %%
-        Model = frac3d(Mf);
+        Model = frac3d_o(Mf);
         %% time stepping:
         CFL = 0.5;
         mu = Mf.mu;
-        T = 0.5*1/(mu*k^2);
+%         T = 0.5*1/(mu*k^2);
         T = 1;
         use_imex = true;
         plot_simu = true;

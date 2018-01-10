@@ -16,6 +16,7 @@ Mc.g = 10;
 Mc.mu = 50; 
 z = Mc.L/Mc.nz*[0:Mc.nz]'; 
 Mc.tau = 1;
+Mc.interface_split=false;
 [Mc.rho, Mc.K, Mc.c, Mc.a, Mc.b, Mc.p0, Mc.ex]=magma_st(z);
 Mc.pT.A = 10e3; % pressure perturbation amplitude
 Mc.pT.T = 1; % pressure perturbation duration

@@ -35,7 +35,7 @@ Mf.rhos = 3e3;
 Mf.Gs   = Mf.cs^2*Mf.rhos;
 Mf.nu  = ((Mf.cp/Mf.cs)^2-2)/((Mf.cp/Mf.cs)^2-1)/2;
 %
-frac = frac3d(Mf);
+frac = frac3d_o(Mf);
 %%
 disp('Test stability and energy stability');
 [is_stable, is_energy_stable,eig_s,eig_es] = test_energy_stability(frac.A, frac.E);
