@@ -1,17 +1,15 @@
-% test frac3d, inviscid 2D acoustics from point source.
+% test frac2dxy, inviscid 2D acoustics from point source.
 clear;
 source_dir = '../source';
 addpath(genpath(source_dir));
 %% material properties.
 %%
-clear
 % fluid-filled fracture parameters.
 Mf.w0 = 2;
 Mf.Lx   = 4;
 Mf.Ly   = 4;
 Mf.nx = 200;
 Mf.ny = 200;
-Mf.nz = 8;
 Mf.order = 4;
 Mf.interp_order = 6;
 Mf.xs = 0.5*Mf.Lx;
@@ -32,7 +30,7 @@ Mf.c    = 1;
 Mf.K    = Mf.rho*Mf.c^2;
 Mf.mu = 0;
 %% construct coupled models.
-Model = frac3d_o(Mf);
+Model = frac2dxy(Mf);
 %% time stepping:
 CFL = 0.25;
 skip = 10;
@@ -41,20 +39,19 @@ use_imex = false;
 plot_simu = false;
 
 % time stepping
-hmin = min(Model.geom.p.hx, Model.geom.p.hy);
-cmax = Mf.c;
+[cmax, hmin] = Model.getCFL();
 dt = CFL*hmin/cmax;
 nt = ceil(T/dt);
 t_n = (0:nt)*dt;
 
 %% query points to compare the solutions;
-x = Model.geom.p.x;
-y = Model.geom.p.y;
+x = Model.grd.p.x;
+y = Model.grd.p.y;
 
 [~, indx] =  find(x>Mf.xs & x<0.75*Mf.Lx);
 [~, indy] =  find(y>Mf.ys & y<0.75*Mf.Ly);
 
-indr = indy + (indx - 1)*Model.geom.p.ny;
+indr = indy + (indx - 1)*Model.grd.p.ny;
 
 xq = x(indx);
 yq = y(indy);
@@ -67,7 +64,7 @@ tic
 for i = 1 : Nrq
     [p_a(i,:), t_a] = acoustics2D_pointsource(rq(i), Mf.c, g, dt);
 end
-assert(max(abs(imag(p_a(:))))<1e-12);
+assert(max(abs(imag(p_a(:)./real(p_a(:)))))<1e-6);
 p_a = real(p_a);
 toc
 
@@ -75,7 +72,7 @@ toc
 p_n= zeros(length(rq), nt+1);
 
 if ~ use_imex
-    A = Model.Ae + Model.Ai;
+    A = Model.getA();
 else
     [L,U,p,q,B] = imex_ark4_get_lu(Model.Ai,dt);
     A = Model.Ae;
@@ -103,8 +100,8 @@ for i=1:nt
     if plot_simu
         if mod(i,skip) == 0
             %plot solution.
-            X = Model.geom.p.X;
-            Y = Model.geom.p.Y;
+            X = Model.grd.p.X;
+            Y = Model.grd.p.Y;
             p_mat = reshape(p_vec, size(X));
             pcolor(X, Y, p_mat);
             xlabel('x'); ylabel('y');

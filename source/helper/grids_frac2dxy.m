@@ -79,6 +79,9 @@ g.vx.grd = @(u) reshape(u, g.vx.ny, g.vx.nx);
 % p op:
 op.vx.Dx1    = Dxp;% 1D.
 op.vx.Dx2    = kron(Dxp, Iyp);%dvx/dx for dp/dt
+op.vx.Px1    = Pxm; % 1D
+op.vx.Py1    = Pyp; % 1D
+op.vx.Pxy2  = kron(Pxm, Pyp); % for energy norm dp/dt.
 op.vx.restrictions = restrictions(nxm, nyp); 
 %% vy grid (x, y) and op.
 g.vy.x = xp;
@@ -94,5 +97,8 @@ g.vy.grd = @(u) reshape(u, g.vy.ny, g.vy.nx);
 % p op:
 op.vy.Dy1    = Dyp;% 1D.
 op.vy.Dy2    = kron(Ixp, Dyp);% dvy/dy for dp/dt. 2D.
+op.vy.Px1    = Pxp; % 1D
+op.vy.Py1    = Pym; % 1D
+op.vy.Pxy2  = kron(Pxp, Pym); % for energy norm dp/dt.
 op.vy.restrictions = restrictions(nxp, nym); 
 end

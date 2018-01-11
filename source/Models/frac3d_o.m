@@ -10,6 +10,7 @@ classdef frac3d_o
         dc;             % the discretized delta function of at the coupling location.
         Ae;             % the part of A that treated explicitly.
         Ai;              % the part of A that treated implicitly.
+        disloc3d;    % the 3d dislocation model for the crack.
         E;               % energy norm
         
         % M:
@@ -36,8 +37,10 @@ classdef frac3d_o
                 M.K_t      = M.K;
             else
                 % TO DO: implement 3D DDM to calculate Ks.
-                [M.Ks, M.Ks_inv] = KernelBEM2D(geom.pp.x, M.Gs, M.nu);
-                M.K_t      = inv(1/M.K * speye(op.pp.n1, op.pp.n1) + M.Ks_inv/M.w0);
+                obj.disloc3d = disloc3dGrid(M.Xc, M.Yc, M.Zc, M.strike, M.dip, obj.geom.p.X, obj.geom.p.Y, M.Gs, M.nu);
+                M.Ks   = obj.disloc3d.K;
+                M.Ks_inv = obj.disloc3d.K_inv;
+                M.K_t      = inv(1/M.K * speye(size(M.Ks_inv)) + M.Ks_inv/M.w0);
             end
 
             obj.M = M;

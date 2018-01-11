@@ -56,7 +56,7 @@ classdef frac2dxy
 %             toc;
             obj.M = M;
             
-            if M.use_fft
+            if isfield(M, 'use_fft') && M.use_fft
                 [obj.kernel_fft, obj.mask_fft]= obj.fft_kernel(M.npad_fft);
             end
             
@@ -75,7 +75,7 @@ classdef frac2dxy
                 [~, obj.dc] = obj.delta(M.xc, M.yc, M.interp_order);
             end
             obj = obj.init();
-            
+            obj.E = obj.energy_norm();
         end
         
         function obj = init(obj)
@@ -130,16 +130,33 @@ classdef frac2dxy
             Ai = spdiags([zeros(dim(1), 1); ...
                                  -alpha*rhoi*ones(sum(dim(2:end)), 1)], 0, sum(dim), sum(dim));
                              % explicit part.
-             Ae = block_matrix(dim,dim,0);
+            Ae = block_matrix(dim,dim,0);
             
              % Wave propagation
             % A12 and A13 and coupling terms are addressed separatly.
             % to avoid assemble huge dense matrix.
-            
+%             Ae12 = -obj.M.K_t * obj.op.vx.Dx2;
+%             Ae13 = -obj.M.K_t * obj.op.vy.Dy2;
             Ae21 = -rhoi*obj.op.p.Dx2;
             Ae31 = -rhoi*obj.op.p.Dy2;
             Ae = block_matrix_insert(Ae,dim,dim,2,1,  Ae21);
-            Ae = block_matrix_insert(Ae,dim,dim,3,1,  Ae31);
+            Ae = block_matrix_insert(Ae,dim,dim,3,1,  Ae31); 
+%             Ae = block_matrix_insert(Ae,dim,dim,1,2,  Ae12);
+%             Ae = block_matrix_insert(Ae,dim,dim,1,3,  Ae13);
+        end
+        
+        function A = getA(obj)
+            % return the full A matrix.
+            A_sparse = obj.Ai + obj.Ae;
+            % insert the part has dense Kt matrix.
+            % A12, A13
+            dim = obj.dimensions();
+            A_dense = block_matrix(dim,dim,0);
+            Ae12 = -obj.M.K_t * obj.op.vx.Dx2;
+            Ae13 = -obj.M.K_t * obj.op.vy.Dy2;
+            A_dense = block_matrix_insert(A_dense,dim,dim,1, 2,  Ae12);
+            A_dense = block_matrix_insert(A_dense,dim,dim,1, 3,  Ae13);
+            A = A_sparse + A_dense;
         end
         
         function [cmax, hmin] = getCFL(obj)
@@ -207,12 +224,9 @@ classdef frac2dxy
             % Energy norm, E*A+A'*E
             dim = obj.dimensions();
             E    = block_matrix(dim,dim,1);
-            
-            % dense matrix inserting should be avoided, we only
-            % calculate it if we have to.
-%             E    = block_matrix_insert(E,dim,dim,1,1,obj.M.w0*inv(obj.M.K_t)*obj.op.p.Pxy2);
-%             E    = block_matrix_insert(E,dim,dim,2,2,obj.M.rho*obj.op.vx.Pxyz3);
-%             E    = block_matrix_insert(E,dim,dim,3,3,obj.M.rho*obj.op.vy.Pxyz3);
+            E    = block_matrix_insert(E,dim,dim,1,1,obj.M.w0*inv(obj.M.K_t)*obj.op.p.Pxy2);
+            E    = block_matrix_insert(E,dim,dim,2,2,obj.M.w0*obj.M.rho*obj.op.vx.Pxy2);
+            E    = block_matrix_insert(E,dim,dim,3,3,obj.M.w0*obj.M.rho*obj.op.vy.Pxy2);
         end
         
     end
