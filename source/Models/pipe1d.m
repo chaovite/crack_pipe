@@ -251,6 +251,54 @@ classdef pipe1d
         % a function for integrating the explicit
         du    =  obj.Ae*u + obj.Fp*obj.op.bc.tp.f(t);
     end
+    
+    function E = energy_norm(obj)
+        % calculate the energy norm of the pipe
+        % vz, pz, h, etas.
+          dim = obj.dimensions();
+          E    = block_matrix(dim,dim,1);
+          rho = obj.grd.rho;
+          K    = obj.grd.K;
+          S    = obj.grd.S;
+          nz   = obj.grd.nz;
+          E11  = rho*obj.op.H;
+          E22  = S*inv(K)*obj.op.H;
+          E33  = S(end, end)*rho(end, end)*obj.M.g;
+          
+          E    = block_matrix_insert(E, dim, dim, 1, 1, E11);% kinetic energy
+          E    = block_matrix_insert(E, dim, dim, 2, 2, E22);% compressibility
+          E    = block_matrix_insert(E, dim, dim, 3, 3, E33);% gravity of top surface.
+          % gravity of material interfaces, etas.
+          
+          %get all the material interfaces.
+          nint  = length(obj.M.interfaces);
+          
+          inds = [];
+          for i = 1: nint
+              if obj.M.interfaces{i}.type=='m'
+                  inds = [inds; i];
+              end
+          end
+          
+          % loop over all the material interfaces.
+          nfaces = length(inds);
+          j = 3; % vz,p,h
+          for i = 1: nfaces
+            % add addition eta's for each material interface.
+              j = j + 1;
+              ind_m = obj.op.interfaces{inds(i)}.indm;
+              ind_p  = obj.op.interfaces{inds(i)}.indp;
+              rho_m = obj.grd.rho(ind_m, ind_m);
+              rho_p  = obj.grd.rho(ind_p, ind_p);
+              drho    = rho_m - rho_p;
+              S_m = obj.grd.S(ind_m, ind_m);
+              S_p  = obj.grd.S(ind_p, ind_p);
+              S_j   = (S_m + S_p)/2; 
+              % get the jump in density across the interfaces
+              E    = block_matrix_insert(E, dim, dim, j,  j, drho*S_j*obj.M.g);% gravity of top surface.
+          end
+
+    end
     end
     
 end
