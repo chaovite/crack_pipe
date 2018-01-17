@@ -4,7 +4,7 @@ function [p, t] = acoustics2D_pointsource(r, c, g, dt)
 %
 % dp+ux+uy = g(t)*delta(r).
 %
-% d^2p/dt^2 + Lap(p) = g'(t)*delta(r)
+% 1/c^2*d^2p/dt^2 + Lap(p) = g'(t)*delta(r)
 %
 % Notation of fourier transform ghat(omega) = int exp(-i*omega*t)*g(t)dt.
 % this notation is different from Eric's notation.
