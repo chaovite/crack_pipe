@@ -1,6 +1,7 @@
-function [g,t] = ifft_dim(G,df)
+function [g,t] = ifft_dim_n(G,df)
 % Inverse Fourier transform: 
-% g= int_{-inf}^{+inf} ghat(omega)*exp(i*omega*t) domega
+% g= int_{-inf}^{+inf} ghat(omega)*exp(-i*omega*t) domega
+% 
 % check if the G is a column vector or a row vector
 
   if size(G,1) == 1
@@ -12,7 +13,6 @@ function [g,t] = ifft_dim(G,df)
   N = length(g);
   
   t = [0:N-1]/(N*df);
-  
   g = ifft(conj(g))/t(2);
 
 end

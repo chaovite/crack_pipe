@@ -25,7 +25,7 @@ Mf.r_g  =  0.3;% ratio of grid points in boundary layer.
 Mf.r_bl =  0.3; % estimated ration of boundary layer.
 
 % fluid and solid properties.
-Mf.rho = 1;
+Mf.rho = 2;
 Mf.c    = 1;
 Mf.K    = Mf.rho*Mf.c^2;
 Mf.mu = 0;
@@ -57,7 +57,7 @@ xq = x(indx);
 yq = y(indy);
 
 rq = sqrt((xq-Mf.xs).^2 + (yq-Mf.ys).^2);
-g = Mf.G(0:dt:nt*dt);
+g = Mf.G(0:dt:nt*dt)*Mf.rho/Mf.w0;
 p_a= zeros(length(rq), nt);
 Nrq = length(rq);
 tic

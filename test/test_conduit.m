@@ -25,6 +25,7 @@ Mc.G = @(t) Mc.pT.A*exp(-0.5*((t-Mc.pT.t)/Mc.pT.T)^2); % external force from the
 Mc.bottom_bc = 'p=0';
 
 cond = conduit(Mc);
+
 [A,G,F,~,~,~,~, Ai, Ae] = magma_2d(Mc.nr,Mc.R,Mc.nz,Mc.L,Mc, Mc.order);
 
  assert(norm(full(cond.Ai - Ai), 2) < 1e-10,'Fail the test of Ai');

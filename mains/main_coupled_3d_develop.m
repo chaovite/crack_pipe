@@ -11,20 +11,25 @@ Mc.nr = 20;
 Mc.order = 2;
 Mc.S = pi*Mc.R^2;
 Mc.g = 10;
-Mc.mu = 50;
-Mc.interface_split = true;
+Mc.mu = 0;
+Mc.interface_split = false;
 z = Mc.L/Mc.nz*[0:Mc.nz]';
 Mc.tau = 1;
-[Mc.rho, Mc.K, Mc.c, Mc.a, Mc.b, Mc.p0, Mc.ex] = magma_st(z);
+% [Mc.rho, Mc.K, Mc.c, Mc.a, Mc.b, Mc.p0, Mc.ex] = magma_st(z);
+% 
+% if Mc.interface_split
+%     Mc.split_index = find(Mc.ex, 1) - 1;
+%     z = Mc.L/Mc.nz*[0:(Mc.split_index -1),Mc.split_index, Mc.split_index:Mc.nz]';
+%     [Mc.rho, Mc.K, Mc.c, Mc.a, Mc.b, Mc.p0, Mc.ex] = magma_st(z);
+% end
 
-if Mc.interface_split
-    Mc.split_index = find(Mc.ex, 1) - 1;
-    z = Mc.L/Mc.nz*[0:(Mc.split_index -1),Mc.split_index, Mc.split_index:Mc.nz]';
-    [Mc.rho, Mc.K, Mc.c, Mc.a, Mc.b, Mc.p0, Mc.ex] = magma_st(z);
-end
+Mc.with_exsolution = false;
+Mc.rho = 1200 * ones(Mc.nz+1, 1);
+Mc.c    = 1800 * ones(Mc.nz+1, 1);
+Mc.K    = Mc.rho.*Mc.c.^2;
 
 Mc.pT.A = 5e3; % pressure perturbation amplitude
-Mc.pT.T = 1; % pressure perturbation duration
+Mc.pT.T = 0.25; % pressure perturbation duration
 Mc.pT.t = 2; % pressure perturbation center time
 Mc.G = @(t) Mc.pT.A*exp(-0.5*((t-Mc.pT.t)/Mc.pT.T)^2); % external force from the conduit.
 % Mc.G = @(t) 0; % external force from the conduit.
@@ -73,7 +78,7 @@ Model = coupledModel_NoMatrix(Mc, Mf);
 CFL = 0.5;
 skip = 40;
 T = 100;
-use_imex = true;
+use_imex = false;
 plot_simu = true;
 
 % data_folder = '../../../../data/Videos/coupled_inviscid_L2000/';

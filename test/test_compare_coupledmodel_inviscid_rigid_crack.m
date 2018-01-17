@@ -60,7 +60,7 @@ Mc.xc = 0.5*Mc.Lx;% the coupling location to the conduit.
 Mc.yc = 0.5*Mc.Ly;% the coupling location to the conduit.
 
 % if the crack is rigid.
-Mc.isrigid = false;
+Mc.isrigid = true;
 Mc.use_fft = false;
 Mc.npad_fft = 256;
 
@@ -206,7 +206,7 @@ Mf.G  = @(t) 0;
 Mf.xc = 0.5*Mf.Lx;% the coupling location to the conduit.
 Mf.yc = 0.5*Mf.Ly;% the coupling location to the conduit.
 
-Mf.isrigid = false;
+Mf.isrigid = true;
 Mf.r_g  =  0.3;% ratio of grid points in boundary layer.
 Mf.r_bl =  0.15; % estimated ration of boundary layer.
 
@@ -327,13 +327,13 @@ d2.z     = z;
 d2.X    = X;
 d2.Y    = Y;
 %%
-save('compare_coupledmodel_inviscid','d1','d2','nkeep');
+save('compare_coupledmodel_inviscid_rigid_crack','d1','d2','nkeep');
 %%
-load('compare_coupledmodel_inviscid','d1','d2','nkeep');
+load('compare_coupledmodel_inviscid_rigid_crack','d1','d2','nkeep');
 nkeep = length(d1.pz);
 % compare conduit pressure and velocity.
 figure(1);
-set(gcf,'position',[0,0,1200,1200])
+set(gcf,'position',[0 0 1200, 1200])
 for i=1: nkeep
     subplot(4,2,[1,2])
     plot(d1.z, d1.pz{i,1},'k-',d2.z, d2.pz{i,1},'r-');
