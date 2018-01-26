@@ -47,7 +47,7 @@ Mc.Lx       = 2e3;
 Mc.Ly       = 2e3;
 Mc.nx       = 32;
 Mc.ny       = 32;
-Mc.order  = 4;
+Mc.order  = 2;
 Mc.interp_order = 2;
 
 % Injecting source location at the crack.
@@ -109,7 +109,7 @@ vzs       = cell(nkeep, 1);
 pxys     = cell(nkeep, 1);
 
 [L,U,p,q,B] = imex_ark4_get_lu(model.Ai, dt);
-fun = @(u, t) model.fun_integrate(u, t);
+fun = @(u, t) model.fun_integrate(u, t) + model.Ai*u;
 tic
 Us = zeros(3, nt);
 model=model.init();
@@ -118,7 +118,8 @@ cnt = 0;
 
 for i=1:nt
     t = (i-1)*dt;
-    u = imex_ark4_lu(u,t,dt,fun, model.Ai, L, U, p, q);
+%     u = imex_ark4_lu(u,t,dt,fun, model.Ai, L, U, p, q);
+    u=lsrk4(fun,u,t,dt);
     if mod(i, round(nt/100))==0
         fprintf( '%% %f  finished', round(i*100/nt));
         toc;
@@ -208,7 +209,7 @@ Mf.yc = 0.5*Mf.Ly;% the coupling location to the conduit.
 
 Mf.isrigid = false;
 Mf.r_g  =  0.3;% ratio of grid points in boundary layer.
-Mf.r_bl =  0.15; % estimated ration of boundary layer.
+Mf.r_bl =  0.3; % estimated ration of boundary layer.
 
 % fluid and solid properties.
 Mf.rho = Mc.rho(1);

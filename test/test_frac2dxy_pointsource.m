@@ -5,13 +5,13 @@ addpath(genpath(source_dir));
 %% material properties.
 %%
 % fluid-filled fracture parameters.
-Mf.w0 = 2;
+Mf.w0 = 1;
 Mf.Lx   = 4;
 Mf.Ly   = 4;
-Mf.nx = 200;
-Mf.ny = 200;
-Mf.order = 4;
-Mf.interp_order = 6;
+Mf.nx = 256;
+Mf.ny = 256;
+Mf.order = 6;
+Mf.interp_order = 10;
 Mf.xs = 0.5*Mf.Lx;
 Mf.ys = 0.5*Mf.Ly;
 % Mf.G  = @(t) 5e4/(Mc.c(1)*Mc.rho(1))*ricker(t, 1, 2); % no external forcing in the crack.
@@ -25,7 +25,7 @@ Mf.r_g  =  0.3;% ratio of grid points in boundary layer.
 Mf.r_bl =  0.3; % estimated ration of boundary layer.
 
 % fluid and solid properties.
-Mf.rho = 2;
+Mf.rho = 1;
 Mf.c    = 1;
 Mf.K    = Mf.rho*Mf.c^2;
 Mf.mu = 0;
@@ -106,7 +106,7 @@ for i=1:nt
             pcolor(X, Y, p_mat);
             xlabel('x'); ylabel('y');
             cmap;
-            caxis([-6 6]);
+            caxis([-6, 6]);
             shading INTERP;
             title(sprintf('t=%f',t));
             axis([0 Model.M.Lx, 0 Model.M.Ly]);
@@ -122,10 +122,11 @@ end
 toc;
 
 %% compare the solutions
+figure;
 for i = 1:2:length(rq); plot(t_a, p_a(i,:) + 5*rq(i),'k-'); hold on;end
-for i = 1:2:length(rq); plot(t_n, p_n(i,:) + 5*rq(i),'r--'); hold on;end
+for i = 1:2:length(rq); plot(t_n, p_n(i,:) + 5*rq(i),'r-'); hold on;end
 hold off;
 xlabel('time');
 ylabel('pressure');
-title('Red: analytical (FFT); Black: numerical');
+title('frac2dxy, Red: numerical; Black: analytical (FFT)');
 set(gca,'fontsize',18);

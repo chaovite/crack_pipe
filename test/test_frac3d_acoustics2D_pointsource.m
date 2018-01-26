@@ -6,14 +6,14 @@ addpath(genpath(source_dir));
 %%
 clear
 % fluid-filled fracture parameters.
-Mf.w0 = 2;
+Mf.w0 = 1;
 Mf.Lx   = 4;
 Mf.Ly   = 4;
-Mf.nx = 200;
-Mf.ny = 200;
-Mf.nz = 8;
-Mf.order = 4;
-Mf.interp_order = 6;
+Mf.nx = 256;
+Mf.ny = 256;
+Mf.nz = 12;
+Mf.order = 6;
+Mf.interp_order = 10;
 Mf.xs = 0.5*Mf.Lx;
 Mf.ys = 0.5*Mf.Ly;
 % Mf.G  = @(t) 5e4/(Mc.c(1)*Mc.rho(1))*ricker(t, 1, 2); % no external forcing in the crack.
@@ -60,7 +60,7 @@ xq = x(indx);
 yq = y(indy);
 
 rq = sqrt((xq-Mf.xs).^2 + (yq-Mf.ys).^2);
-g = Mf.G(0:dt:nt*dt);
+g = Mf.G(0:dt:nt*dt)*Mf.rho/Mf.w0;
 p_a= zeros(length(rq), nt);
 Nrq = length(rq);
 tic
@@ -125,10 +125,11 @@ end
 toc;
 
 %% compare the solutions
+figure
 for i = 1:2:length(rq); plot(t_a, p_a(i,:) + 5*rq(i),'k-'); hold on;end
-for i = 1:2:length(rq); plot(t_n, p_n(i,:) + 5*rq(i),'r--'); hold on;end
+for i = 1:2:length(rq); plot(t_n, p_n(i,:) + 5*rq(i),'r-'); hold on;end
 hold off;
 xlabel('time');
 ylabel('pressure');
-title('Red: analytical (FFT); Black: numerical');
+title('frac3d, Red: numerical; Black: analytical (FFT)');
 set(gca,'fontsize',18);

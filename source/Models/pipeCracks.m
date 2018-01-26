@@ -196,7 +196,7 @@ classdef pipeCracks
             indp   = obj.indu.(name).p;
             qp     = obj.Ap.(name) * u;
             
-            if obj.cracks.(name).M.use_fft
+            if isfield(obj.cracks.(name).M,'use_fft') && obj.cracks.(name).M.use_fft
                 kernel = obj.cracks.(name).kernel_fft;
                 mask  = obj.cracks.(name).mask_fft;
                 qp_fft = zeros(size(kernel));

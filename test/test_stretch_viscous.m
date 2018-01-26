@@ -2,11 +2,11 @@
 source_dir = '../source';
 addpath(genpath(source_dir));
 %% Simulation settings
-skip            = 10;
-order           = 6;
-show_grid       = false;
-nx              = 50;
-ny              = 30;
+skip                = 10;
+order              = 2;
+show_grid      = false;
+nx                   = 50;
+ny                   = 32;
 use_imex       = true;
 test_stability  = false;
 plot_source   = false;

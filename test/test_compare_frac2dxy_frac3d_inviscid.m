@@ -13,7 +13,7 @@ Mf.Lx   = 2e3;
 Mf.Ly   = 2e3;
 Mf.nx   = 64;
 Mf.ny   = 64;
-Mf.nz   = 8;
+Mf.nz   = 20;
 Mf.order = 4;
 Mf.interp_order = 6;
 Mf.xs = 0.5*Mf.Lx;
@@ -22,7 +22,7 @@ Mf.G  = @(t) ricker(t, 2, 2/2);
 Mf.xc = 0.5*Mf.Lx;% the coupling location to the conduit.
 Mf.yc = 0.5*Mf.Ly;% the coupling location to the conduit.
 
-Mf.isrigid = false;
+Mf.isrigid = true;
 Mf.r_g     =  0.3;% ratio of grid points in boundary layer.
 Mf.r_bl    =  0.3; % estimated ration of boundary layer.
 
@@ -161,7 +161,7 @@ d2.X       = X;
 d2.Y       = Y;
 d2.n       = nkeep;
 
-save('test_compare_frac2dxy_frac3d_inviscid_not_rigid','d1','d2','nkeep');
+save('test_compare_frac2dxy_frac3d_inviscid_rigid','d1','d2','nkeep');
 %%
 load('test_compare_frac2dxy_frac3d_inviscid_rigid','d1','d2','nkeep');
 for i = 1: nkeep
@@ -185,7 +185,7 @@ for i = 1: nkeep
     shading interp;
     cmap;
     colorbar;
-    caxis([-1e-6, 1e-6]);
+%     caxis([-1e-6, 1e-6]);
     title('frac2dxy-frac3d difference');
     pause();
 end

@@ -1,4 +1,4 @@
-function [p, v, t, R, T, omega] = pipe_inf_crack_inf(L, a, d, rho, c, ...
+function [p, v, t, R, T, omega] = pipe_inf_crack_inf(L, a, d, rho, cp0, cc0, ...
                                                                                 g, dt, z, r, mu)
 % [p, v] = pipe_inf_crack_inf(l, a, d, rho, c, g, z, r)
 % calculate the pressure and velocity response of a pipe-crack system.
@@ -21,7 +21,8 @@ function [p, v, t, R, T, omega] = pipe_inf_crack_inf(L, a, d, rho, c, ...
 %   a: pipe radius
 %   d: crack total opening.
 %   rho: fluid density
-%   c: fluid wave speed.
+%   cp0: fluid acoustic wave speed, in the pipe
+%   cc0: fluid acoustic wave speed, in the crack.
 %   g: pressure source time function at the top
 %   dt: time step of the source.
 %   z: z coordinate of the query point, range: [-L, +inf)
@@ -38,7 +39,7 @@ function [p, v, t, R, T, omega] = pipe_inf_crack_inf(L, a, d, rho, c, ...
 %   omega: angular frequency.
 %
 
-if nargin<10
+if nargin<11
     mu = 0;
 end
 
@@ -59,8 +60,8 @@ if d==0
     beta = 0;
 end
 
-cp = c*sqrt(1./(1+1i*alpha./(rho*omega))); % phase velocity in pipe.
-cc = c*sqrt(1./(1+1i*beta./(rho*omega))); % phase velocity in crack.
+cp = cp0*sqrt(1./(1+1i*alpha./(rho*omega))); % phase velocity in pipe.
+cc = cc0*sqrt(1./(1+1i*beta./(rho*omega))); % phase velocity in crack.
 
 % k   = omega./c;
 kp = omega./cp;
@@ -83,24 +84,24 @@ kc = omega./cc;
 h01 = besselh(0,1,kc*a);
 h11 = besselh(1,1,kc*a);
 % reflection and transmission:
-F      = 1i*d*h11.*cp./cc./(a*h01);
+F      = 1i*d*h11.*cc./cp./(a*h01);
 R     =  - F./(1 + F);
 T     =  1./(1 + F);
 A     = ghat./(exp(1i*kp*(-L)) + R.*exp(-1i*kp*(-L)));
-G     = T./h01;
+G     = A.*T./h01;
 
 switch loc_q
    case 'pipe'
         if z<=0
             phat =  (exp(1i*kp*z) +  R.*exp(-1i*kp*z)).*A;
-            vhat =  (exp(1i*kp*z)  -  R.*exp(-1i*kp*z)).*A./(rho*cp);
+            vhat =  (exp(1i*kp*z)  -  R.*exp(-1i*kp*z)).*A.*cp/(rho*c^2);
         else
             phat = A.*T.*exp(1i*kp*z);
-            vhat = A.*T.*exp(1i*kp*z)./(rho*cp);
+            vhat = A.*T.*exp(1i*kp*z).*cp/(rho*cp0^2);
         end
     case 'crack'
         phat = G.*besselh(0,1,r*kc);
-        vhat = 1i*G.*besselh(1,1,kc*r)./(rho*cc);
+        vhat = 1i*G.*besselh(1,1,kc*r).*cc./(rho*cc0^2);
 end
 
 df = f(2) - f(1);

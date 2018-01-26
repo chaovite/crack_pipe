@@ -19,8 +19,8 @@ Mp.c         =  1200;     % wave speed
 Mp.K         = Mp.rho.*Mp.c.^2;                       % fluid bulk modulus.
 Mp.mu      = 0;                                           %  viscosity.
 Mp.S         = pi*Mp.R.^2;                               % pipe surface area.
-Mp.nz        = 32;               % number grid points in each section.
-Mp.g         = 10;                            % gravitational acceleration
+Mp.nz        = 64;               % number grid points in each section.
+Mp.g         = 0;                            % gravitational acceleration
 Mp.order   = 2;                             % order of spatial discretization.
 
 Mp.interfaces = [];
@@ -41,13 +41,13 @@ pipe = pipe1d(Mp);
 % fluid-filled fracture parameters.
 
 % the name of the interface of the pipe that this crack is coupled to. 
-Mc.name = 'bt';
+Mc.name  = 'bt';
 Mc.w0      = 2;
 Mc.Lx       = 2e3;
 Mc.Ly       = 2e3;
 Mc.nx       = 32;
 Mc.ny       = 32;
-Mc.order  = 4;
+Mc.order   = 2;
 Mc.interp_order = 2;
 
 % Injecting source location at the crack.
@@ -108,8 +108,8 @@ pzs       = cell(nkeep, 1);
 vzs       = cell(nkeep, 1);
 pxys     = cell(nkeep, 1);
 
-[L,U,p,q,B] = imex_ark4_get_lu(model.Ai, dt);
-fun = @(u, t) model.fun_integrate(u, t);
+% [L,U,p,q,B] = imex_ark4_get_lu(model.Ai, dt);
+fun = @(u, t) model.fun_integrate(u, t) + model.Ai*u;
 tic
 Us = zeros(3, nt);
 model=model.init();
@@ -118,7 +118,8 @@ cnt = 0;
 
 for i=1:nt
     t = (i-1)*dt;
-    u = imex_ark4_lu(u,t,dt,fun, model.Ai, L, U, p, q);
+    u=lsrk4(fun, u,t,dt);
+%     u = imex_ark4_lu(u,t,dt,fun, model.Ai, L, U, p, q);
     if mod(i, round(nt/100))==0
         fprintf( '%% %f  finished', round(i*100/nt));
         toc;
@@ -173,11 +174,11 @@ clear Mc
 % conduit parameters
 Mc.R   = 10;
 Mc.L   = 1000;
-Mc.nz = 32;
+Mc.nz = 64;
 Mc.nr  = 6;
 Mc.order = 2;
 Mc.S = pi*Mc.R^2;
-Mc.g = 10;
+Mc.g = 0;
 Mc.mu = 0;
 Mc.interface_split = false;
 Mc.with_exsolution = false;
@@ -199,7 +200,7 @@ Mf.nx = 32;
 Mf.ny = 32;
 Mf.nz = 4;
 Mf.order = 2;
-Mf.interp_order = 4;
+Mf.interp_order = 2;
 Mf.xs = 0.75*Mf.Lx;
 Mf.ys = 0.5*Mf.Ly;
 Mf.G  = @(t) 0;
@@ -327,9 +328,9 @@ d2.z     = z;
 d2.X    = X;
 d2.Y    = Y;
 %%
-save('compare_coupledmodel_inviscid_rigid_crack','d1','d2','nkeep');
+% save('compare_coupledmodel_inviscid_rigid_crack','d1','d2','nkeep');
 %%
-load('compare_coupledmodel_inviscid_rigid_crack','d1','d2','nkeep');
+% load('compare_coupledmodel_inviscid_rigid_crack','d1','d2','nkeep');
 nkeep = length(d1.pz);
 % compare conduit pressure and velocity.
 figure(1);
@@ -337,7 +338,7 @@ set(gcf,'position',[0 0 1200, 1200])
 for i=1: nkeep
     subplot(4,2,[1,2])
     plot(d1.z, d1.pz{i,1},'k-',d2.z, d2.pz{i,1},'r-');
-    ylim([-Mc.pT.A, Mc.pT.A]);
+    ylim([-5e3, 5e3]);
     title('pressure');
     legend('pipeCrack','coupledModel');
     
@@ -362,7 +363,7 @@ for i=1: nkeep
     colorbar;
     caxis([-5e3, 5e3]/2);
     title('coupledModel');
-    pause();
+    pause(0.05);
 end
 
 

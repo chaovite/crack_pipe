@@ -112,7 +112,7 @@ classdef frac2dxy
             d = delta2d(obj.grd.p.x,xs, obj.grd.p.y,ys, interp_order); % weights of discretization of the delta function.
 
             % Scale by material properties and grid spacing
-            es = obj.M.K_t*(obj.op.p.Pxy2\d);
+            es = obj.M.K_t*(obj.op.p.Pxy2\d)/obj.M.w0;
             e = block_matrix(dim,1,0);
             e = block_matrix_insert(e,dim,1,1,1,es);
         end

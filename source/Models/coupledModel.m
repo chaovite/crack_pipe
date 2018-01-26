@@ -8,7 +8,7 @@ classdef coupledModel
     Ae;             % the part of A that treated explicitly.
     Ai;              % the part of A that treated implicitly.
     E;               % energy norm
-    u;               % unknowns in the conduit, vz, pz, nz, h, px, vx.
+    u;               % unknowns vz, pz, nz, h, px, vx.
 
   end
 
@@ -141,7 +141,7 @@ classdef coupledModel
          if ~isfield(obj.frac.M,'nz')
              alpha = obj.conduit.M.S/obj.frac.M.S;
          else
-             alpha = obj.conduit.M.S;
+             alpha = obj.conduit.M.S/obj.frac.M.w0;
          end
          Kt = obj.frac.M.K_t;
           if ~isfield(obj.frac.M,'nz')

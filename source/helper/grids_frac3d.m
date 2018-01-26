@@ -39,6 +39,8 @@ zp = boundary_layer_thickness(zp/Lz, r_g, r_bl);% stretched grid
 zm = boundary_layer_thickness(zm/Lz, r_g, r_bl);% stretched grid.
 zp = Lz*zp'; zm = Lz*zm';
 
+% construct Jacobian analytically.
+
 nzp = length(zp);
 nzm = length(zm);
 

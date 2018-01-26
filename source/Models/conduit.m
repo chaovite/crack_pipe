@@ -23,7 +23,7 @@ classdef conduit
       obj.M        = M;
       
       %construct grid and operators
-      if ~M.interface_split || ~ isfield(M,'interface_split')
+      if ~ isfield(M,'interface_split') || ~M.interface_split
           [obj.geom, obj.op] = grids_conduit(M.nr, M.R, ...
                                              M.nz, M.L, M.order);
       else
