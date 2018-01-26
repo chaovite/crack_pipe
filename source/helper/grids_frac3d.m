@@ -31,22 +31,22 @@ end
 
 % weak operators are used to construct the Jacobian.
 [zp, zm, Pzp, Pzm, Qzp, Qzm] = sbp_staggered_weak(order,nz,Lz/nz);
-Dzp = inv(Pzp)*Qzp;
-Dzm = inv(Pzm)*Qzm;
+% Dzp = inv(Pzp)*Qzp;
+% Dzm = inv(Pzm)*Qzm;
 
 % stretch the grid only in z direction.
-zp = boundary_layer_thickness(zp/Lz, r_g, r_bl);% stretched grid
-zm = boundary_layer_thickness(zm/Lz, r_g, r_bl);% stretched grid.
+[zp, Jzp]   = boundary_layer_thickness(zp/Lz, r_g, r_bl);% stretched grid
+[zm, Jzm] = boundary_layer_thickness(zm/Lz, r_g, r_bl);% stretched grid.
 zp = Lz*zp'; zm = Lz*zm';
 
 % construct Jacobian analytically.
-
-nzp = length(zp);
-nzm = length(zm);
-
-% Jacobian. d_eta/dz. (eta is the stretched grid and z is the uniform grid)
-Jzp = spdiags(Dzp*zm,0, nzp, nzp); 
-Jzm = spdiags(Dzm*zp,0, nzm, nzm);
+% 
+% nzp = length(zp);
+% nzm = length(zm);
+% % 
+% % % Jacobian. d_eta/dz. (eta is the stretched grid and z is the uniform grid)
+% Jzp = spdiags(Dzp*zm,0, nzp, nzp); 
+% Jzm = spdiags(Dzm*zp,0, nzm, nzm);
 
 % Jacobian. dz/d_eta.
 Jzpi  = inv(Jzp);
@@ -56,7 +56,6 @@ Jzmi  = inv(Jzm);
 Jzm  = trunc_mat(Jzm,truncate);
 Jzmi = trunc_mat(Jzmi,truncate);
 zm   = trunc_vec(zm,truncate);
-zp   = trunc_vec(zp,truncate);
 nzp = length(zp);
 nzm = length(zm);
 
