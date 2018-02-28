@@ -52,9 +52,16 @@ A21 = A21 + rho*M.g*op.W2;
 A22 = sparse(nz,nz);
 A23 = sparse(nz,1);
 
-A31 = op.W1*(kron(en',Ir));
-A32 = 1/(rho(end)*c(end))*en';
-A33 = -M.g/c(end);
+if isfield(M, 'SL')
+    % SL: Surface area of Lake
+    alpha = M.S(end)/M.SL;
+else
+    alpha = 1.0;
+end
+
+A31 = alpha*op.W1*(kron(en',Ir));
+A32 = alpha*1/(rho(end)*c(end))*en';
+A33 = -alpha*M.g/c(end);
 
 % contribution from the SAT term of boundaries:
 A12 = A12 + ...
@@ -102,6 +109,6 @@ Ae = A - Ai;
 % Array for pressure forcing
 Fp = vertcat(kron(-(SAT(end)/(rho(end)*c(end)))*en,er), ...
              SAT(end)*en, ...
-             -1/(rho(end)*c(end)));
+             -1*alpha/(rho(end)*c(end)));
 end
 

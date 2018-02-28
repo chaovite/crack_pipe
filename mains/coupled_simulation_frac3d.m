@@ -3,7 +3,7 @@
 %% Model parameters.
 % conduit parameters
 % change to two section pipe model.
-% 
+%
 source = '../source';
 addpath(genpath(source));
 %%
@@ -26,16 +26,16 @@ para.PTA    = 1e5;%
 para.xc_ratio = 0.5;
 para.yc_ratio = 0.5;
 
-para.strike  = 0;%
-para.dip      = 0;%
+para.strike  = 90;%
+para.dip      = 60;%
 
 para.target  = 0.033; %
 para.xq       = 0; %
 para.yq       = 1000; %
-para.nx       = 32;%
-para.nz       = 16/min(para.upper_ratio, 1 - para.upper_ratio);%
-para.nz_f    = 16;%
-para.nr       = 16;%
+para.nx       = 8;%
+para.nz       = 8/min(para.upper_ratio, 1 - para.upper_ratio);%
+para.nz_f    = 8;%
+para.nr       = 8;%
 para.order  = 4;
 para.g        = 10;
 para.Xc      = 0;
@@ -72,8 +72,8 @@ Mc.K   = Mc.rho.*(Mc.c).^2;
 
 Mc.pT.A = para.PTA; % pressure perturbation amplitude
 Mc.pT.T = 1; % pressure perturbation duration
-Mc.pT.t = 2; % pressure perturbation center time
-Mc.G = @(t) Mc.pT.A*exp(-0.5*((t-Mc.pT.t)/Mc.pT.T)^2); % external force from the conduit.
+Mc.pT.t = 5; % pressure perturbation center time
+Mc.G = @(t) Mc.pT.A*exp(-0.5*((t-Mc.pT.t)/Mc.pT.T).^2); % external force from the conduit.
 
 %% fracture parameters.
 Mf.w0 = para.w0;
@@ -118,31 +118,39 @@ cond = conduit(Mc);
 frac = frac3d_o(Mf);
 Model = coupledModel(cond, frac);
 %% time domain simulation.
-
 CFL = 0.5;
 skip = 50;
-T = 200;
+T = 100;
 use_imex = true;
 plot_simu = true;
 
 % time stepping
-hmin = min(Model.conduit.geom.dz, Model.frac.geom.p.hx);
+hmin = min([Model.conduit.geom.dz, Model.frac.geom.p.hx, Model.frac.geom.p.hy]);
 cmax = max(max(Model.conduit.M.c), Model.frac.M.c);
 dt = CFL*hmin/cmax;
 nt = ceil(T/dt);
-
-% surface displacement.
-Us = zeros(3, nt);
-
+%% fields to be stored.
+nkeep   = floor(nt/skip);
+time      = [skip:skip:nt]*dt;
+pzs       = cell(nkeep, 1);
+vzs       = cell(nkeep, 1);
+uzs       = cell(nkeep, 1);
+pxys     = cell(nkeep, 1);
+vx_ms  = cell(nkeep, 1);
+uxs       = cell(nkeep, 1);
+Us         = zeros(3*length(para.xq), nt);
+%%
 if ~ use_imex
     A = Model.Ae + Model.Ai;
 else
     [L,U,p,q,B] = imex_ark4_get_lu(Model.Ai,dt);
     A = Model.Ae;
 end
+
 fun = @(u,t) A*u + Model.Fp(:,1)*Model.conduit.M.G(t) + Model.Fp(:,2)*Model.frac.M.G(t);
 tic
-Hp = Model.get_Hp(para.xq,para.yq);
+Hp = Model.get_Hp(para.xq, para.yq);
+
 for i=1:nt
     t = (i-1)*dt;
     if ~use_imex
@@ -159,100 +167,178 @@ for i=1:nt
     % surface displacement
     Us(:,i) = Hp*Model.u;
     
-    if plot_simu
-        if mod(i,skip) == 0
-            %plot solution.
-            if Mc.with_exsolution
-                [vz, pz, ~,~, px, vx] = Model.fields(Model.u);
-            else
-                [vz, pz,~, px, vx] = Model.fields(Model.u);
-            end
-            uz = Model.conduit.op.W2*Model.field(Model.u, [1, 1]);
+    if mod(i,skip) == 0
+        iter = i/skip;
+        
+        %plot solution.
+        % unknowns in the conduit.
+        nr  = Model.conduit.geom.nr;
+        nz = Model.conduit.geom.nz;
+        vz  = reshape(Model.field(Model.u, [1, 1]),[nr,nz]); % [nr, nz]
+        pz  = Model.field(Model.u, [1, 2]); % [nz, 1]
+        h    = Model.field(Model.u, [1, 3]); % [1,  1]
+        uz  = (Model.conduit.op.W1*vz)';%   [nz, 1]
+        
+        z   = Model.conduit.geom.z;
+        rm  = Model.conduit.geom.rm;
+        
+        % unknowns in the crack:
+        pxy      = Model.frac.geom.p.grd(Model.field(Model.u, [2, 1])); %[nxp, nxp]
+        X_pxy  = Model.frac.geom.p.X;
+        Y_pxy  = Model.frac.geom.p.Y;
+        
+        vx   = Model.field(Model.u, [2, 2]);
+        ux   = Model.frac.geom.ux.grd(Model.frac.op.vx.Wz3*vx);
+        X_ux = Model.frac.geom.ux.X;
+        Y_ux = Model.frac.geom.ux.Y;
+        
+        vy   = Model.field(Model.u, [2, 3]);
+        uy   = Model.frac.geom.uy.grd(Model.frac.op.vy.Wz3*vy);
+        X_uy = Model.frac.geom.uy.X;
+        Y_uy = Model.frac.geom.uy.Y;
+        
+        % reshape vx, vy and keep the middle slice.
+        vx = Model.frac.geom.vx.grd(vx);
+        vy = Model.frac.geom.vy.grd(vy);
+        
+        vx_ymid =  round(length(Model.frac.geom.vx.y)/2);
+        vy_xmid =  round(length(Model.frac.geom.vy.x)/2);
+        
+        vx_m = squeeze(vx(:,vx_ymid,:)); %[nz, nx]
+        [Z_vxm, X_vxm] = meshgrid(Model.frac.geom.vx.x, Model.frac.geom.vx.z); %[nz, nx]
+        vy_m = squeeze(vy(:,:,vy_xmid)); %[nz, ny]
+        [Z_vym, Y_vym] = meshgrid(Model.frac.geom.vy.y, Model.frac.geom.vy.z);%[nz, ny]
+        
+        pzs{iter,1}       = pz;
+        vzs{iter,1}       = vz;
+        uzs{iter,1}       = uz;
+        pxys{iter,1}     = pxy;
+        vx_ms{iter,1}  = vx_ms;
+        uxs{iter,1}       = ux;
+        
+        %% save the data in d structure.
+        d.time = time;
+
+        % fields in the pipe.
+        d.nr = nr;
+        d.nz = nz;
+        d.z   = z;
+        d.rm = rm;
+
+        d.pzs = pzs;
+        d.vzs = vzs;
+        d.uzs = uzs;
+
+        % fields in the crack.
+        % save pxys
+        d.X_pxy = X_pxy;
+        d.Y_pxy = Y_pxy;
+        d.pxys = pxys;
+
+        % save uxs
+        d.X_ux = X_ux;
+        d.Y_ux = Y_ux;
+        d.uxs   = uxs;
+
+        % save vxm
+        d.Z_vxm = Z_vxm;
+        d.X_vxm = X_vxm;
+        d.vx_ms = vx_ms;
+
+        d.Mc = Mc;
+        d.Mf  = Mf;
+        save(['data',num2str(iter)],'d');
+        
+        if plot_simu
+            % plot the crack.
+            figure(1);
+            subplot(4,1,1)
+            pcolor(Z_vym, Y_vym, vy_m); cmap;shading interp
+            caxis([-0.03, 0.03]);
+            colorbar
+            subplot(4,1,2)
+            pcolor(Z_vxm, X_vxm, vx_m); cmap;shading interp
+            caxis([-0.03, 0.03]);
+            colorbar
+            subplot(4,1,[3,4])
+            pcolor(X_pxy, Y_pxy, pxy); cmap;shading interp
+            caxis([-1e4, 1e4]);
+            colorbar
+            drawnow;
             
-            rm = Model.conduit.geom.rm;
-            z = Model.conduit.geom.z;
+            % plot the conduit.
+            figure(2);
+            subplot(1,3,1)
+            pcolor(rm, z, vz');
+            shading INTERP;
+            cmap;
+            caxis([-5e-1 5e-1])
+            colorbar
+            xlabel('r (m)'), ylabel('z (m)')
             
-%             xm = Model.frac.geom.m.x;
-%             ym = Model.frac.geom.m.y;
-%             xp  = Model.frac.geom.p.x;
-%             
-            %fracture
-%             figure(1);
-%             subplot(3,1,1);
-%             pcolor(xm, ym, vx);
-%             xlabel('x'); ylabel('y');
-%             cmap;
-%             caxis([-2.5e-1 2.5e-1]);
-%             shading INTERP;
-%             title(sprintf('t=%f',t));
-%             xlim([0 Model.frac.M.L]);
-%             
-%             subplot(3,1,2);
-%             plot(xm, vx(round(size(vx,1)/2), :)');
-%             xlabel('x');
-%             ylabel('v');
-%             ylim([-2.5e-1 2.5e-1]);
-%             xlim([0 Model.frac.M.L]);
-%             
-%             subplot(3,1,3);
-%             plot(xp, px);
-%             xlabel('x');
-%             ylabel('p');
-%             ylim([-10e4, 10e4]);
-%             xlim([0 Model.frac.M.L]);
+            subplot(1,3,2)
+            plot(uz, z);
+            xlim([-5e-1, 5e-1])
+            ylim([0 Model.conduit.M.L])
+            xlabel('u'), ylabel('z (m)')
+            
+            subplot(1,3,3)
+            plot(pz, z);
+            xlim([-1e5,1e5]);
+            ylim([0 Model.conduit.M.L])
+            xlabel('p'), ylabel('z (m)')
+            drawnow;
             
             % plot the surface displacement vertical component.
-%             figure(2);
+            figure(3);
             plot([1:i]*dt, Us(3,1:i),'-k');
             xlim([0 T]);xlabel('time (s)');ylabel('Uz');
             ylim([-10e-5, 10e-5]);
             grid on;
             drawnow;
-            
-            %conduit.
-%             figure(3);
-%             subplot(1,3,1)
-%             pcolor(rm, z, vz');
-%             shading INTERP;
-%             cmap;
-%             caxis([-5e-2 5e-2])
-%             xlabel('r (m)'), ylabel('z (m)')
-%             
-%             subplot(1,3,2)
-%             plot(uz, z);
-%             xlim([-5e-2, 5e-2])
-%             ylim([0 Model.conduit.M.L])
-%             xlabel('u'), ylabel('z (m)')
-%             
-%             subplot(1,3,3)
-%             plot(pz, z);
-%             xlim([-5e4,5e4]);
-%             ylim([0 Model.conduit.M.L])
-%             xlabel('p'), ylabel('z (m)')
-            
-%             subplot(1,4,4)
-%             plot(nz, z)
-%             xlim([-1e-5, 1e-5]);
-%             ylim([0 Model.conduit.M.L])
-%             xlabel('n'), ylabel('z (m)');
-            drawnow;
         end
-        
     end
 end
-toc;
-t = [1:nt]*dt; 
-save('Us_nx_16_nr_8_200s','Us','t');
 
-%%
-d1 = load('Us_nx_16_nr_8_200s');
-d2 = load('Us_nx_8_nr_8_400s');
+%% save the data in d structure.
+d.time = time;
 
-plot(d1.t, d1.Us(3,:),'-k');
-hold on;
-plot(d2.t, d2.Us(3,:),'-k');
-xlim([0 200]);xlabel('time (s)');ylabel('Uz');
-ylim([-10e-5, 10e-5]);
+% fields in the pipe.
+d.nr = nr;
+d.nz = nz;
+d.z   = z;
+d.rm = rm;
+
+d.pzs = pzs;
+d.vzs = vzs;
+d.uzs = uzs;
+
+% fields in the crack.
+% save pxys
+d.X_pxy = X_pxy;
+d.Y_pxy = Y_pxy;
+d.pxys = pxys;
+
+% save uxs
+d.X_ux = X_ux;
+d.Y_ux = Y_ux;
+d.uxs   = uxs;
+
+% save vxm
+d.Z_vxm = Z_vxm;
+d.X_vxm = X_vxm;
+d.vx_ms = vx_ms;
+
+d.Mc = Mc;
+d.Mf  = Mf;
+save('data','d');
+
+
+
+
+
+
+
 
 
 

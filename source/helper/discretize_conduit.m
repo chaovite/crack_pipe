@@ -37,15 +37,23 @@ A22 = -K*a*b/M.tau;
 A23 = -K*a/M.tau;
 A24 = sparse(nz,1);
 
+
+if isfield(M, 'SL')
+    % SL: Surface area of Lake
+    alpha = M.S(end)/M.SL;
+else
+    alpha = 1.0;
+end
+
 A31 = op.W2*(kron(-M.g*rho*b,Ir));
 A32 = -b/M.tau;
 A33 = -op.Iz/M.tau;
 A34 = sparse((nz),1);
 
-A41 = op.W1*(kron(en',Ir)); %M.S/M.SL
-A42 = 1/(rho(end)*c(end))*en'; %M.S/M.SL
+A41 = alpha*op.W1*(kron(en',Ir)); %M.S/M.SL
+A42 = alpha*1/(rho(end)*c(end))*en'; %M.S/M.SL
 A43 = sparse(1,(nz));
-A44 = -M.g/c(end);%M.S/M.SL*
+A44 = -alpha*M.g/c(end);%M.S/M.SL*
 
 % contribution from the SAT term of boundaries:
 A12 = A12 + ...
@@ -95,6 +103,6 @@ Ae = A - Ai;
 Fp = vertcat(kron(-(SAT(end)/(rho(end)*c(end)))*en,er), ...
              SAT(end)*en, ...
              spalloc(nz,1,1), ...
-             -1/(rho(end)*c(end)));
+             -alpha*1/(rho(end)*c(end)));
 end
 
