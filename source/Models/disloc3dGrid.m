@@ -183,9 +183,23 @@ classdef disloc3dGrid
             
         end  
         
+        function Kb = get_Kb(obj, w0)
+            % compute the bulk stiffness of the crack, ignore the
+            % compressibility of the fluid.
+            %
+            % w0: the crack width
+            % assume uniform pressure within the crack and caculate the
+            
+            N       =  numel(obj.x); % number of fault elements.
+            p        =  ones(N, 1); % unit uniform pressure.
+            w       =  obj.K_inv * p; % open dislocation.
+            dw     = mean(w);
+            s        = dw/w0; % strain.
+            Kb      = 1/s; % bulk stiffness.
+        end
+        
         function [K, K_inv] = ddm_matrix_fullspace(obj)
             % implement the elastic kernel in 3D elastic fullspace.
-            
             
         end
         
