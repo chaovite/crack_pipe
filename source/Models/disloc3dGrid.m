@@ -111,7 +111,42 @@ classdef disloc3dGrid
             % Hp size: [3*nq, np]
             Hw = obj.get_Hw(xq, yq);
             Hp = Hw*obj.K_inv;
-        end        
+        end
+        
+        
+        function Hp = get_Hp_tilt(obj, xq, yq)
+            % get the matrix Hp that relates the pressure to surface
+            % tilt observed at xq and yq.
+            % Hp size: [3*nq, np]
+            Hw = obj.get_Hw_tilt(xq, yq);
+            Hp = Hw*obj.K_inv;
+        end
+        
+        function Hw_tilt = get_Hw_tilt(obj, xq, yq)
+            % get the matrix Hw_tilt that relates the opening w to surface
+            % tilt observed at xq and yq.
+            % Hw_tilt size: [3*nq, nw]
+            % Hw_tilt(i, j) is the amount of tilt component i given unit
+            % dislocation at fault j.
+
+            N = numel(obj.x); % number of fault elements.
+            Nq = numel(xq);   % number of query points.
+            Hw_tilt = zeros(Nq*3, N); 
+            
+            % we make use of the function obj.get_Hw
+            Hwxp  = obj.get_Hw(xq+1, yq);  % x+1
+            Hwxm = obj.get_Hw(xq-1, yq);   % x-1
+            Hwyp  = obj.get_Hw(xq,yq+1);   % y+1
+            Hwym = obj.get_Hw(xq,yq-1);    % y-1
+            
+            % compute tilt using 2nd order central difference.
+            % tilt in x direction.
+            Hw_tilt(1:3:end, :) =  (Hwxp(1:3:end, :) - Hwxm(1:3:end, :))/2;
+            % tilt in y direction.
+            Hw_tilt(2:3:end, :) = (Hwyp(2:3:end, :) - Hwym(2:3:end, :))/2;
+            % tilt in z direction = 0
+        end
+        
 
         function Hw = get_Hw(obj, xq, yq)
             % get the matrix Hp that relates the opening w to surface

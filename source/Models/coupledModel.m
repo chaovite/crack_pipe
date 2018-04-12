@@ -9,7 +9,6 @@ classdef coupledModel
     Ai;              % the part of A that treated implicitly.
     E;               % energy norm
     u;               % unknowns vz, pz, nz, h, px, vx.
-
   end
 
   methods
@@ -180,6 +179,22 @@ classdef coupledModel
             indp  = sum(dim_c) + [1: dim_f(1)]';
             Hp(:, indp) = Hp_i;
             Hp = sparse(Hp);
+    end
+    
+    function Hp_tilt = get_Hp_tilt(obj, xq, yq, omega)
+        % get the observation matrix for surface tilt at angular frequency
+        % omega.
+            g     = 9.8; % gravitational acceleration.
+            Nq  = length(xq);
+            dim = obj.dimensions();
+            dim_c = obj.conduit.dimensions();
+            dim_f  = obj.frac.dimensions(); 
+            N    = sum(dim);
+            Hp_tilt = zeros(3*Nq, N);
+            Hp_i = obj.frac.disloc3d.get_Hp_tilt(xq, yq);
+            indp  = sum(dim_c) + [1: dim_f(1)]';
+            Hp_tilt(:, indp) = Hp_i*g/(1i*omega)^2;
+            Hp_tilt = sparse(Hp_tilt);
     end
     
     function obj = update(obj,U)
