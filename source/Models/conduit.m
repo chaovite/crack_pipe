@@ -82,6 +82,65 @@ classdef conduit
       indices = field_indices(obj.dimensions(),num);
       u = U(indices);
     end
+    
+    function [Epc, Epg, Ek, Evis]= get_energetics(obj, u)
+        % [Epc, Epg, Ek, Evis]= get_energetics(obj, u)
+        %
+        % Epc : potential energy from fluid compressibility (>0)
+        % Epg : potential energy from gravity (>0)
+        % Ek   : fluid kinetic energy. (>0)
+        % Evis : energy dissipation rate from fluid viscosity. (<0)
+        %
+        % TODO: exsolution is not implemented.
+        %
+        
+        vz = obj.field(u, 1);
+        pz = obj.field(u, 2);
+        h = obj.field(u, 3);
+        
+        Hz = obj.op.Pz;
+        
+        % rho, K, S must be a vector of dimension [nz, 1]
+        rho = obj.M.rho;
+        K    = obj.M.K;
+        S    = obj.M.S;
+        g    = obj.M.g;
+        
+        nz  = obj.geom.nz;
+        nr   = obj.geom.nr;
+        
+        if ~isfield(obj.M, 'SL')
+            SL = S(end);
+        end
+        
+        % potential energy from gravity
+        Epg = 0.5 * rho(end)*g*(h'*h)*SL;
+        
+        % potential energy from fluid compressibility.
+        Epc = 0.5 * pz'*spdiags(S./K, nz, nz, 0)*Hz*pz;
+        
+        % fluid kinetic energy.
+        RHO = spdiags(rho, nz, nz, 0);
+        Rm   = obj.op.Rm;
+        Pm   = obj.op.Pm;
+        Rp    = obj.op.Rp;
+        Pp    = obj.op.Pp;
+        
+        Hv = 2*pi*kron(RHO.*Hz, Rm*Pm);
+        Ek   = 0.5*vz'*Hv*vz;
+        
+        % fluid viscous energy dissipation rate.
+        D1r2 = obj.op.D1r2;
+        dvz   =  D1r2*vz;
+        
+        if length(obj.M.mu)==1
+            mu = ones(nz, 1)*obj.M.mu;
+        end
+        
+        MU    =  spdiags(mu, nz, nz, 0);
+        Hdvz = 2*pi*kron(MU.*Hz, Rp*Pp);
+        Evis  = - dvz'*Hdvz*dvz;
+    end
 
     function E = energy_norm(obj)
       dim = obj.dimensions();
@@ -95,8 +154,8 @@ classdef conduit
           S    = obj.M.S;
           nz   = obj.geom.nz;
           E11  = kron(spdiags(rho,0, nz, nz)*obj.op.Pz, 2*pi*obj.op.Rm*obj.op.Pm);
-          E22  = S*spdiags(1./K,0, nz, nz) * obj.op.Pz;
-          E33  = S*rho(end)*obj.M.g;
+          E22  = spdiags(S./K,0, nz, nz) * obj.op.Pz;
+          E33  = S(end)*rho(end)*obj.M.g;
           E    = block_matrix_insert(E, dim, dim, 1, 1, E11);% kinetic energy
           E    = block_matrix_insert(E, dim, dim, 2, 2, E22);% kinetic energy
           E    = block_matrix_insert(E, dim, dim, 3, 3, E33);% kinetic energy
@@ -109,9 +168,9 @@ classdef conduit
           S    = obj.M.S;
           nz   = obj.geom.nz;
           E11  = kron(spdiags(rho,0, nz, nz)*obj.op.Pz, 2*pi*obj.op.Rm*obj.op.Pm);
-          E22  = S*spdiags(1./K,0, nz, nz) * obj.op.Pz;
-          E33  = S*spdiags(a./b,0, nz, nz) * obj.op.Pz;
-          E44  = S*rho(end)*obj.M.g;
+          E22  = spdiags(S./K,0, nz, nz) * obj.op.Pz;
+          E33  = spdiags(S*a./b,0, nz, nz) * obj.op.Pz;
+          E44  = S(end)*rho(end)*obj.M.g;
           E    = block_matrix_insert(E, dim, dim, 1, 1, E11);% kinetic energy
           E    = block_matrix_insert(E, dim, dim, 2, 2, E22);% kinetic energy
           E    = block_matrix_insert(E, dim, dim, 3, 3, E33);% kinetic energy

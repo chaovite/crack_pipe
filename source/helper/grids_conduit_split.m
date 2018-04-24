@@ -44,9 +44,6 @@ Dz = block_matrix_insert(Dz, dim, dim, 2, 2, Dz2);
 Rp = spdiags(rp,0,nr+1,nr+1);
 Rm = spdiags(rm,0,nr,nr);
 
-% Assemble second derivative in r direction.
-D2 = inv(Rm)*inv(Pm)*Qm*Rp*inv(Pp)*Qp;
-
 e0 = spalloc(nz+2,1,1);
 en = spalloc(nz+2,1,1);
 
@@ -65,9 +62,21 @@ ez = ones([nz+2,1]);
 Iz = speye(nz+2);
 Ir = speye(nr);
 
-% width averaging operators.
+% Assemble second derivative in r direction.
+D2 = inv(Rm)*inv(Pm)*Qm*Rp*inv(Pp)*Qp;
+
+% first derivative in r direction 
+D1r1 =  inv(Pp)*Qp; % 1D. [nr+1, nr]
+D1r2 =  kron(Iz, D1r1); % 2D [(nr+1)*(nz+1), nr*(nz+1)]
+
+% cross-section averaging operators for the staggered grid vz.
 W1 = (2/R^2)*er'*Rm*Pm; % Cylindrical width averaged operator that operators on just one row of v, dimension [1, nr]
 W2 = kron(Iz,W1); % Operates on the entire v, dimension [(nz+2)*nr]
+
+% cross-section averaging operators for dvz/dr, which is on the standard grid.
+erp = ones([nr+1,1]);
+W1p = (2/R^2)*erp'*Rp*Pp;
+W2p = kron(Iz, W1p);
 
 % construct the grids
 g.dz = dz;
@@ -91,8 +100,17 @@ op.Pm= Pm;
 op.Qp= Qp;
 op.Qm= Qm;
 op.D2 = D2;
+
+op.D1r1 = D1r1;
+op.D1r2 = D1r2;
+
 op.W1 = W1;
 op.W2 = W2;
+
+op.W1p = W1p;
+op.W2p = W2p;
+op.erp   = erp;
+
 op.e0 = e0;
 op.en = en;
 op.eIm = eIm; % interface minus side.

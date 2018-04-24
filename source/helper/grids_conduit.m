@@ -11,9 +11,6 @@ Pz = inv(Pz_inv);
 Rp = spdiags(rp,0,nr+1,nr+1);
 Rm = spdiags(rm,0,nr,nr);
 
-% Assemble second derivative in r direction.
-D2 = inv(Rm)*inv(Pm)*Qm*Rp*inv(Pp)*Qp;
-
 e0 = spalloc(nz+1,1,1);
 en = spalloc(nz+1,1,1);
 
@@ -26,9 +23,21 @@ ez = ones([nz+1,1]);
 Iz = speye(nz+1);
 Ir = speye(nr);
 
-% width averaging operators.
+% Assemble second derivative in r direction.
+D2  = inv(Rm)*inv(Pm)*Qm*Rp*inv(Pp)*Qp;
+
+% first derivative in r direction 
+D1r1 =  inv(Pp)*Qp; % 1D. [nr+1, nr]
+D1r2 =  kron(Iz, D1r1); % 2D [(nr+1)*(nz+1), nr*(nz+1)]
+
+% width averaging operators for v. v is on the staggered grid.
 W1 = (2/R^2)*er'*Rm*Pm; % Cylindrical width averaged operator that operators on just one row of v, dimension [1, nr]
 W2 = kron(Iz,W1); % Operates on the entire v, dimension [(nz+1)*nr]
+
+% averaging operator for dv/dr, dv/dr is on the standard grid.
+erp = ones([nr+1, 1]);
+W1p = (2/R^2)*erp'*Rp*Pp;
+W2p = kron(Iz, W1p);
 
 % construct the grids
 g.dz = dz;
@@ -52,14 +61,23 @@ op.Pm= Pm;
 op.Qp= Qp;
 op.Qm= Qm;
 op.D2 = D2;
-op.W1 = W1;
-op.W2 = W2;
+
+% add first derivative with respect to r to compute 
+op.D1r1 = D1r1;
+op.D1r2 = D1r2;
+op.W1   = W1;
+op.W2   = W2;
+
+op.W1p = W1p;
+op.W2p = W2p;
+op.erp   = erp;
+
 op.e0 = e0;
 op.en = en;
-op.er = er;
+op.er  = er;
 op.ez = ez;
-op.Iz = Iz;
-op.Ir = Ir;
+op.Iz  = Iz;
+op.Ir   = Ir;
 
 end
 

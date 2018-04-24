@@ -138,9 +138,9 @@ classdef coupledModel
          
          % conduit to fracture.
          if ~isfield(obj.frac.M,'nz')
-             alpha = obj.conduit.M.S/obj.frac.M.S;
+             alpha = obj.conduit.M.S(1)/obj.frac.M.S;
          else
-             alpha = obj.conduit.M.S/obj.frac.M.w0;
+             alpha = obj.conduit.M.S(1)/obj.frac.M.w0;
          end
          Kt = obj.frac.M.K_t;
           if ~isfield(obj.frac.M,'nz')
@@ -184,7 +184,7 @@ classdef coupledModel
     function Hp_tilt = get_Hp_tilt(obj, xq, yq, omega)
         % get the observation matrix for surface tilt at angular frequency
         % omega.
-            g     = 9.8; % gravitational acceleration.
+            obj.conduit.M.g     = 9.8; % gravitational acceleration.
             Nq  = length(xq);
             dim = obj.dimensions();
             dim_c = obj.conduit.dimensions();
@@ -201,6 +201,14 @@ classdef coupledModel
        obj.u = U;
        obj.conduit = obj.conduit.update(obj.field(U,1));
        obj.frac = obj.frac.update(obj.field(U,2));
+    end
+    
+    function [Epf_p, Epg_p, Ek_p, Evis_p, Epf_c, Epw_c, Ek_c, Evis_c] = get_energetics(obj, u)
+        % do the energetics analysis given a solution vector u.
+        upipe = obj.field(u, 1);
+        ufrac = obj.field(u,  2);
+        [Epf_c, Epw_c, Ek_c, Evis_c]= obj.frac.get_energetics(ufrac);
+        [Epf_p, Epg_p, Ek_p, Evis_p]= obj.conduit.get_energetics(upipe);
     end
     
     function [D, V, D_full,V_full] = eigs(obj)

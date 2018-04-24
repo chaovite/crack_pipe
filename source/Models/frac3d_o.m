@@ -113,7 +113,7 @@ classdef frac3d_o
             Ae = block_matrix(dim,dim,0);
             Ai = block_matrix(dim,dim,0);
             
-            rhoi = 1/obj.M.rho;
+            rhoi = 1./obj.M.rho;
             mu  = obj.M.mu;
 
             % Wave propagation
@@ -130,6 +130,59 @@ classdef frac3d_o
             Ae = block_matrix_insert(Ae,dim,dim,3,1, Ae31);
             Ai = block_matrix_insert(Ai, dim, dim, 2, 2, Ai22);
             Ai = block_matrix_insert(Ai, dim, dim, 3, 3, Ai33);
+        end
+        
+        function [Epf, Epw, Ek, Evis]= get_energetics(obj, u)
+            %  [Epf, Epw, Ek, Evis]= get_energetics(obj, u) 
+            % % get the energetics of the crack.
+            % Epf : potential energy from fluid compressibility (>0)
+            % Epw : potential energy from crack wall (>0)
+            % Ek   : fluid kinetic energy. (>0)
+            % Evis : energy dissipation rate from fluid viscosity. (<0)
+            %
+            
+            % note that the density and viscosity, wave speed inside the
+            % crack is assumed to be constant.
+            
+            % get solutions
+            
+            p   = field(obj, u, 1);
+            Hp = obj.op.p.Pxy2;
+            
+            vx = field(obj, u, 2);
+            vy = field(obj, u, 3);
+            
+            
+            w0 = obj.M.w0;
+            rho = obj.M.rho;
+            mu = obj.M.mu;
+            
+            % fluid bulk modulus
+            Kf   = obj.M.K;
+            % fracture wall compressibility.
+            Ks_inv  = obj.M.Ks_inv/w0;
+            
+            % potential energy from fluid compressibility
+            Epf       =  0.5*w0/Kf * p'*Hp*p;
+            
+            % potential energy from crack wall.
+            Epw       =  0.5*w0 * p'*Ks_inv*Hp*p;
+            
+            % kinetic energy x direction
+            Hvx = obj.op.vx.Pxyz3;
+            Hvy = obj.op.vy.Pxyz3;
+            Ekx       = 0.5*rho*vx'*Hvx*vx;
+            Eky       = 0.5*rho*vy'*Hvy*vy;
+            
+            Ek   = Ekx + Eky;
+            
+            % energy dissipation rate from viscosity.
+            % first derivative of velocity.
+            dvx = obj.op.vx.D1z3*vx;
+            dvy = obj.op.vy.D1z3*vy;
+            Hdvx =  obj.op.vx.Pxyz3_dz;
+            Hdvy =  obj.op.vy.Pxyz3_dz;
+            Evis = - mu * (dvx'*Hdvx*dvx + dvy'*Hdvy*dvy);
         end
         
         function E = energy_norm(obj)

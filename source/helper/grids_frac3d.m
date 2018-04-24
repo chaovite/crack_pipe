@@ -146,9 +146,18 @@ g.vx.grd = @(u) reshape(u, g.vx.nz, g.vx.ny, g.vx.nx);
 % vx, op. Attention! Grid stretch in z direction!
 op.vx.D2z1 = Jzmi*Dzm*Jzpi* Dzp;% D2z in 1D
 op.vx.D2z3 = kron(kron(Ixm,Iyp), op.vx.D2z1); % D2z in 3D
+
+% first derivative of vx.
+op.vx.D1z1 = Jzpi* Dzp; % D1z in 1D
+op.vx.D1z3 = kron(kron(Ixm,Iyp), op.vx.D1z1); % D1z in 3D.
+
 op.vx.Wz1  = 1/Lz*ones(1, g.vx.nz)*Jzm*Pzm;% width-average operator in 1D
 op.vx.Wz3  = kron(kron(Ixm, Iyp), op.vx.Wz1);% width-average operator in 3D
 op.vx.Pxyz3 = kron(kron(Pxm,Pyp), Jzm*Pzm);% for the energy norm.
+
+% quadrature of dvx/dz
+op.vx.Pxyz3_dz =  kron(kron(Pxm,Pyp), Jzp*Pzp);% for the energy norm.
+
 op.vx.restrictions = restrictions(nxm,nyp,nzm);
 
 %% vy grid and op.
@@ -171,9 +180,17 @@ g.vy.grd = @(u) reshape(u, g.vy.nz, g.vy.ny, g.vy.nx);
 
 op.vy.D2z1 = Jzmi*Dzm*Jzpi* Dzp;
 op.vy.D2z3 = kron(kron(Ixp,Iym), op.vy.D2z1);
+
+op.vy.D1z1 = Jzpi* Dzp;
+op.vy.D1z3 = kron(kron(Ixp,Iym), op.vy.D1z1);
+
 op.vy.Wz1  = 1/Lz*ones(1, g.vx.nz)*Jzm*Pzm;
 op.vy.Wz3  = kron(kron(Ixp, Iym), op.vy.Wz1);
 op.vy.Pxyz3 = kron(kron(Pxp,Pym), Jzm*Pzm);% for the energy norm.
+
+% quadrature of dvx/dz
+op.vy.Pxyz3_dz =  kron(kron(Pxp,Pym), Jzp*Pzp);% for the energy norm.
+
 op.vy.restrictions = restrictions(nxp,nym,nzm);
 %% ux grid (x, y) and op.
 g.ux.x = xm;
