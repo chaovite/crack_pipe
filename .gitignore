@@ -2,4 +2,5 @@
 *.fig
 *.mat
 source/.ipynb_checkpoints/
-
+dev/
+.ipynb_checkpoints/
