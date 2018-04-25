@@ -111,16 +111,18 @@ classdef conduit
         
         if ~isfield(obj.M, 'SL')
             SL = S(end);
+        else
+            SL = obj.M.SL;
         end
         
         % potential energy from gravity
         Epg = 0.5 * rho(end)*g*(h'*h)*SL;
         
         % potential energy from fluid compressibility.
-        Epc = 0.5 * pz'*spdiags(S./K, nz, nz, 0)*Hz*pz;
+        Epc = 0.5 * pz'*spdiags(S./K, 0, nz, nz)*Hz*pz;
         
         % fluid kinetic energy.
-        RHO = spdiags(rho, nz, nz, 0);
+        RHO = spdiags(rho, 0, nz, nz);
         Rm   = obj.op.Rm;
         Pm   = obj.op.Pm;
         Rp    = obj.op.Rp;
@@ -137,7 +139,7 @@ classdef conduit
             mu = ones(nz, 1)*obj.M.mu;
         end
         
-        MU    =  spdiags(mu, nz, nz, 0);
+        MU    =  spdiags(mu, 0, nz, nz);
         Hdvz = 2*pi*kron(MU.*Hz, Rp*Pp);
         Evis  = - dvz'*Hdvz*dvz;
     end
