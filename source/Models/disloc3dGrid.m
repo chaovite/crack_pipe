@@ -99,8 +99,8 @@ classdef disloc3dGrid
                 % get the stress.
                 [~, ~, S, ~] = disloc3d(mdl,obs, obj.mu,obj.nu);
                 % Sxx, Sxy, Sxz, Syy, Syz, and Szz
-                K(:, i) = -(S(1,:)*n(1)^2 + 2*S(2,:)*n(1)*n(2) + S(3,:)*n(1)*n(3) ...
-                    + S(4,:)*n(2)^2 + S(5,:)*n(2)*n(3) + S(6,:)*n(3)^2); 
+                K(:, i) = -(S(1,:)*n(1)^2 + 2*S(2,:)*n(1)*n(2) + 2*S(3,:)*n(1)*n(3) ...
+                    + S(4,:)*n(2)^2 + 2*S(5,:)*n(2)*n(3) + S(6,:)*n(3)^2); 
             end
             K_inv=inv(K);
         end
