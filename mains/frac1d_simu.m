@@ -1,22 +1,22 @@
 % 3D crack wave simulation
-addpath('../source')
+addpath(genpath('../source'))
 %%
 clear
 % fluid-filled fracture parameters.
-Mf.w0 = 2;
-Mf.Lx   = 1000;
-Mf.nx = 100;
+Mf.w0   = 1;
+Mf.Lx   = 2000;
+Mf.nx = 50;
 Mf.order = 4;
 Mf.interp_order = 4;
 
-Mf.xs = 0.5*Mf.Lx;
+Mf.xs = 0.25*Mf.Lx;
 
 % point source.
-Mf.source.pT.A = 1;
-Mf.source.pT.f0 = 5;
+Mf.source.pT.A = 100;
+Mf.source.pT.f0 = 1;
 Mf.source.pT.t0 = 2/Mf.source.pT.f0;
 % Mf.source.G  = @(t) Mf.source.pT.A*ricker(t, 5, 2/5);
-Mf.source.G  = @(t) Mf.source.pT.A*ricker(t, 5, 2/5);
+Mf.source.G  = @(t) Mf.source.pT.A*ricker(t, 0.1, 2/0.1);
 % Mf.xc = 0.5*Mf.Lx;% the coupling location to the conduit.
 
 % boundary condition. pressure at x=0, zero velocity at x=L;
@@ -36,7 +36,7 @@ Mf.bc.vn.G = @(t) 0;
 Mf.rho = 1.8e3;
 Mf.c    = 2.5e3;
 Mf.K    = Mf.rho*Mf.c^2;
-Mf.mu = 50;
+Mf.mu = 0;
 Mf.cp    = 5e3;
 Mf.cs    = 2.7e3;
 Mf.rhos = 3e3;
@@ -56,7 +56,7 @@ end
 %% time stepping:
 CFL = 0.5;
 skip = 5;
-T = 10;
+T = 100;
 use_imex = true;
 plot_simu = true;
 
@@ -74,7 +74,6 @@ else
 end
 fun = @(u,t) A*u + Model.Fp.ps*Model.M.source.G(t) + Model.M.bc.v0.G(t)*Model.Fp.bc.v0...
                            + Model.M.bc.vn.G(t)*Model.Fp.bc.vn;
-
 tic
 for i=1:nt
     t = (i-1)*dt;
@@ -102,7 +101,7 @@ for i=1:nt
             plot(x_p, sol.p);
             xlabel('x'); ylabel('p');
             title(sprintf('t=%f',t));
-            ylim([-2 2]*Model.M.source.pT.A*(Model.M.rho*Model.M.c));
+            ylim([-1 1]*Model.M.source.pT.A*(Model.M.rho*Model.M.c));
             xlim([0 Mf.Lx]);
             
             subplot(2,1,2);
@@ -110,7 +109,7 @@ for i=1:nt
             xlabel('x'); ylabel('v');
             title(sprintf('t=%f',t));
             xlim([0 Mf.Lx]);
-            ylim([-2 2]*Model.M.source.pT.A);
+            ylim([-1 1]*Model.M.source.pT.A);
             drawnow;
         end
         
