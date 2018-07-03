@@ -26,6 +26,12 @@ else
     K = spdiags(M.K*ones(nz,1), 0,nz,nz);
 end
 
+if length(M.mu)>1
+    mu = spdiags(M.mu,0,nz,nz);
+else
+    mu =spdiags(M.mu*ones(nz,1),0,nz,nz);
+end
+
 % SAT penalties
 SAT = [M.c(1)*op.Pz_inv(1, 1) M.c(end, end)*op.Pz_inv(end)]; % penalty relaxation rate
 %SAT = [0 0]; % no SAT boundary conditions
@@ -38,7 +44,7 @@ en = op.en;
 Ir  = op.Ir;
 
 % contribution of A from PDE [vz, p, h]
-A11 = M.mu*kron(rho_inv,op.D2);
+A11 = kron(mu*rho_inv,op.D2);
 Ai = block_matrix_insert(Ai,dim,dim,1,1, A11); % this part should be treat implicitly;
 
 A12 = kron(-inv(rho)*op.Dz, er);
@@ -47,7 +53,6 @@ A12 = A12 + kron(-inv(K)*M.g, er); % -g/rho*p
 A13 = sparse(nr*(nz),1);
 
 A21 = op.W2*(kron(-K*op.Dz,Ir) + kron(M.g*rho,Ir));
-A21 = A21 + rho*M.g*op.W2;
 
 A22 = sparse(nz,nz);
 A23 = sparse(nz,1);

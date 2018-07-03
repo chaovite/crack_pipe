@@ -145,7 +145,7 @@ classdef conduit_internal_g
       
       E11  = kron(spdiags(rho,0, nz, nz)*obj.op.Pz, 2*pi*obj.op.Rm*obj.op.Pm);
       E22  = spdiags(S./K,0, nz, nz) * obj.op.Pz;
-      E33  = spdiags(rho*Mg*g*S,0, nz, nz) * obj.op.Pz;
+      E33  = spdiags(rho.*Mg.*g.*S,0, nz, nz) * obj.op.Pz;
       E44  = S(end)*rho(end)*g;
       
       E    = block_matrix_insert(E, dim, dim, 1, 1, E11);% kinetic energy

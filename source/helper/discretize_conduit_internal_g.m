@@ -11,7 +11,7 @@ function [Ai, Ae, Fp, SAT] = discretize_conduit_internal_g(geom, op, M, dim)
 
 nz = geom.nz;
 nr = geom.nr;
-Iz = geom.Iz;
+Iz = op.Iz;
 
 % all the material properties in M should be a vector with dimension  [nz, 1]
 propnames = {'Mg', 'rho','c','mu','K'};
@@ -52,6 +52,7 @@ A13 = -kron(M.g*Mg, er);
 A14 = sparse(nr*(nz),1);
 
 A21 = op.W2*(kron(-K*op.Dz,Ir) + kron(M.g*rho,Ir));
+
 A22 = sparse(nz, nz);
 A23 = sparse(nz, nz);
 A24 = sparse(nz,1);
