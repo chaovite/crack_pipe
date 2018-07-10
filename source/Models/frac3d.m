@@ -28,7 +28,7 @@ classdef frac3d
         
         function obj = frac3d(M)
             if ~isfield(M, 'isrigid')
-                M.isrigid = true;
+                M.isrigid = false;
             end
             % construct the grid.
             [obj.geom, obj.op] = grids_frac3d(M.nx,M.ny,M.nz, M.Lx, M.Ly, M.w0, M.order, 'strong',M.r_g, M.r_bl);
@@ -85,6 +85,15 @@ classdef frac3d
                       obj.geom.vy.nx*obj.geom.vy.ny*obj.geom.vy.nz];
         end
         
+        function [cmax, hmin] = getCFL(obj)
+            % get min(c) and max(dz) for CFL condition.
+            cmax = max(obj.M.c);
+            
+            hmin  = min([obj.geom.p.hx, obj.geom.p.hy, ...
+                                obj.geom.vx.hx, obj.geom.vx.hy,...
+                                obj.geom.vy.hx, obj.geom.vy.hy]);
+        end
+
        function obj = update(obj,U)
            obj.u = U;
         end

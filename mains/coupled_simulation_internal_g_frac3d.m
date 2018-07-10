@@ -7,88 +7,54 @@
 source = '../source';
 addpath(genpath(source));
 %%
-% baseline model parameters, two section pipe model.
-para.L                  = 300; % m
-para.upper_ratio  = 0.5; % [0, 1]
-para.R                  = 5;% m
 
-para.rho_upper = 1800;
-para.rho_lower  = 2800;
-para.c_upper     = 1000;
-para.c_lower      = 1800;
+sourcedir = '../source';
+addpath(genpath(sourcedir));
 
-para.mu      = 10; % Pa.s
-para.Lx       = 1000; % m, size in down dip direction.
-para.Ly       = 1000; % m, size along the strike
-para.w0      = 4;% m   crack full width
-para.PTA    = 1e5;%
+Mc.R  = 5; 
+Mc.L   = 300; 
+Mc.nz = 20; 
+Mc.nr = 16; 
+Mc.order = 6;
+Mc.S = pi*Mc.R^2*ones(Mc.nz+1, 1); 
+Mc.g = 10;  
+Mc.with_exsolution=false;
+Mc.interface_split=false;
+Mc.mu = 50*ones(Mc.nz+1, 1);
+z = Mc.L/Mc.nz*[0:Mc.nz]';
 
-para.xc_ratio = 0.5;
-para.yc_ratio = 0.5;
+% density profile
+rho0     = 800;
+rho1     = 2000;
+alpha    = (log(rho1)-log(rho0))/Mc.L;
 
-para.strike  = 90;%
-para.dip      = 60;%
+Mc.rho = rho0*exp(alpha*(Mc.L-z));
+Mc.c    = 1000*ones(Mc.nz+1,1);
+Mc.K    = Mc.rho.*Mc.c.^2;
 
-para.target  = 0.033; %
-para.xq       = 0; %
-para.yq       = 1000; %
-para.nx       = 8;%
-para.nz       = 8/min(para.upper_ratio, 1 - para.upper_ratio);%
-para.nz_f    = 8;%
-para.nr       = 8;%
-para.order  = 4;
-para.g        = 10;
-para.Xc      = 0;
-para.Yc      = 0;
-para.Zc      = 1000;
+Mc.Mg = alpha - Mc.rho*Mc.g./Mc.K;
 
-%% conduit and crack.
-
-Mc.R = para.R;
-Mc.L = para.L;
-Mc.nz = para.nz;
-Mc.nr = para.nr;
-Mc.order = para.order;
-Mc.S = pi*Mc.R^2;
-Mc.g = para.g;
-Mc.mu = para.mu;
-Mc.interface_split = true;
-Mc.with_exsolution = false;
-
-% conduit parameters
-dz = Mc.L/Mc.nz;
-% conduit wave speed, density for the upper and lower section.
-Mc.rho_upper = para.rho_upper;
-Mc.rho_lower  = para.rho_lower;
-Mc.c_upper     = para.c_upper;
-Mc.c_lower     = para.c_lower;
-Mc.L_upper    = para.L*para.upper_ratio;
-Mc.L_lower     = Mc.L - Mc.L_upper;
-
-Mc.split_index = round(Mc.L_lower/dz) + 1;
-Mc.rho = [Mc.rho_lower*ones(Mc.split_index, 1); Mc.rho_upper*ones(Mc.nz+2 - Mc.split_index, 1)];
-Mc.c    = [Mc.c_lower*ones(Mc.split_index, 1); Mc.c_upper*ones(Mc.nz+2 - Mc.split_index, 1)];
-Mc.K   = Mc.rho.*(Mc.c).^2;
-
-Mc.pT.A = para.PTA; % pressure perturbation amplitude
+%%
+Mc.epsilon = 0;
+Mc.pT.A = 2e5; % pressure perturbation amplitude
 Mc.pT.T = 1; % pressure perturbation duration
-Mc.pT.t = 5; % pressure perturbation center time
-Mc.G = @(t) Mc.pT.A*exp(-0.5*((t-Mc.pT.t)/Mc.pT.T).^2); % external force from the conduit.
-
+Mc.pT.t  = 5; % pressure perturbation center time
+Mc.G = @(t) Mc.pT.A*exp(-0.5*((t-Mc.pT.t)/Mc.pT.T)^2); % external force from the conduit.
+model = conduit_internal_g(Mc);
 %% fracture parameters.
-Mf.w0 = para.w0;
-Mf.Lx   = para.Lx;
-Mf.Ly   = para.Ly;
-Mf.nx   = para.nx;
-Mf.ny   = para.nx;
-Mf.nz   = para.nz_f;
-Mf.order = para.order;
-Mf.interp_order = para.order;
+Mf.w0 =  4;
+Mf.Lx   = 2000;
+Mf.Ly   = 2000;
+Mf.nx   = 32;
+Mf.ny   = 32;
+Mf.nz   = 16;
+Mf.order = 6;
+Mf.interp_order = 6;
 Mf.xs = 0.5*Mf.Lx;
 Mf.ys = 0.5*Mf.Ly;
 Mf.G  = @(t) 0;
-Mf.xc = para.xc_ratio*Mf.Lx;% the coupling location to the conduit.
-Mf.yc = para.yc_ratio*Mf.Ly;% the coupling location to the conduit.
+Mf.xc = 0.5*Mf.Lx;% the coupling location to the conduit.
+Mf.yc = 0.5*Mf.Ly;% the coupling location to the conduit.
 
 Mf.isrigid = false;
 Mf.r_g  =  0.3;% ratio of grid points in boundary layer.
@@ -98,7 +64,7 @@ Mf.r_bl =  0.3; % estimated ration of boundary layer.
 Mf.rho  = Mc.rho(1);
 Mf.c     = Mc.c(1);
 Mf.K    = Mf.rho*Mf.c^2;
-Mf.mu = para.mu;
+Mf.mu = Mc.mu(1);
 
 % solid parameters are fixed for now.
 Mf.cp    = 5e3;
@@ -108,19 +74,19 @@ Mf.Gs   = Mf.cs^2*Mf.rhos;
 Mf.nu   = ((Mf.cp/Mf.cs)^2-2)/((Mf.cp/Mf.cs)^2-1)/2;
 
 % crack centroid location, fixed!
-Mf.Xc = para.Xc;
-Mf.Yc = para.Yc;
-Mf.Zc = para.Zc;
-Mf.strike = para.strike;
-Mf.dip = para.dip;
+Mf.Xc = 0;
+Mf.Yc = 500;
+Mf.Zc = 1000;
+Mf.strike = 0;
+Mf.dip     = 0;
 %% construct coupled models.
-cond = conduit(Mc);
+cond = conduit_internal_g(Mc);
 frac = frac3d_o(Mf);
 Model = coupledModel(cond, frac);
 %% time domain simulation.
 CFL = 0.5;
 skip = 50;
-T = 100;
+T = 2;
 use_imex = true;
 plot_simu = true;
 
@@ -132,12 +98,6 @@ nt = ceil(T/dt);
 %% fields to be stored.
 nkeep   = floor(nt/skip);
 time      = [skip:skip:nt]*dt;
-% pzs       = cell(nkeep, 1);
-% vzs       = cell(nkeep, 1);
-% uzs       = cell(nkeep, 1);
-% pxys     = cell(nkeep, 1);
-% vx_ms  = cell(nkeep, 1);
-% uxs       = cell(nkeep, 1);
 Us         = zeros(3*length(para.xq), nt);
 %%
 if ~ use_imex
@@ -216,7 +176,7 @@ for i=1:nt
 %         vx_ms{iter,1}  = vx_ms;
 %         uxs{iter,1}       = ux;
         
-        %% save the data in d structure.
+        % save the data in d structure.
 %         d.time = time;
 % 
 %         % fields in the pipe.
@@ -248,7 +208,7 @@ for i=1:nt
 %         d.Mc = Mc;
 %         d.Mf  = Mf;
 %         save(['data',num2str(iter)],'d');
-        
+        time_i = i*dt;
         if plot_simu
             % plot the crack.
             figure(1);
@@ -264,6 +224,7 @@ for i=1:nt
             pcolor(X_pxy, Y_pxy, pxy); cmap;shading interp
             caxis([-1e4, 1e4]);
             colorbar
+            suptitle(sprintf('time = %f sec',time_i));
             drawnow;
             
             % plot the conduit.
@@ -272,19 +233,19 @@ for i=1:nt
             pcolor(rm, z, vz');
             shading INTERP;
             cmap;
-            caxis([-5e-1 5e-1])
+            caxis([-1 1]);
             colorbar
             xlabel('r (m)'), ylabel('z (m)')
             
             subplot(1,3,2)
             plot(uz, z);
-            xlim([-5e-1, 5e-1])
+            xlim([-1, 1])
             ylim([0 Model.conduit.M.L])
             xlabel('u'), ylabel('z (m)')
             
             subplot(1,3,3)
             plot(pz, z);
-            xlim([-1e5,1e5]);
+            xlim([-2.5e5,2.5e5]);
             ylim([0 Model.conduit.M.L])
             xlabel('p'), ylabel('z (m)')
             drawnow;
@@ -293,56 +254,9 @@ for i=1:nt
             figure(3);
             plot([1:i]*dt, Us(3,1:i),'-k');
             xlim([0 T]);xlabel('time (s)');ylabel('Uz');
-            ylim([-10e-5, 10e-5]);
+            ylim([-1e-4, 1e-4]);
             grid on;
             drawnow;
         end
     end
 end
-
-%% save the data in d structure.
-% d.time = time;
-% 
-% % fields in the pipe.
-% d.nr = nr;
-% d.nz = nz;
-% d.z   = z;
-% d.rm = rm;
-% 
-% d.pzs = pzs;
-% d.vzs = vzs;
-% d.uzs = uzs;
-% 
-% % fields in the crack.
-% % save pxys
-% d.X_pxy = X_pxy;
-% d.Y_pxy = Y_pxy;
-% d.pxys = pxys;
-% 
-% % save uxs
-% d.X_ux = X_ux;
-% d.Y_ux = Y_ux;
-% d.uxs   = uxs;
-% 
-% % save vxm
-% d.Z_vxm = Z_vxm;
-% d.X_vxm = X_vxm;
-% d.vx_ms = vx_ms;
-% 
-% d.Mc = Mc;
-% d.Mf  = Mf;
-% save('data','d');
-
-
-
-
-
-
-
-
-
-
-
-
-
-

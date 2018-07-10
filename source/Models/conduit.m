@@ -143,7 +143,13 @@ classdef conduit
         Hdvz = 2*pi*kron(MU.*Hz, Rp*Pp);
         Evis  = - dvz'*Hdvz*dvz;
     end
-
+    
+        function [cmax, hmin] = getCFL(obj)
+            % get min(c) and max(dz) for CFL condition.
+            cmax = max(obj.M.c);
+            hmin  = min([obj.geom.dz]);
+        end
+    
     function E = energy_norm(obj)
       dim = obj.dimensions();
       E    = block_matrix(dim,dim,1);

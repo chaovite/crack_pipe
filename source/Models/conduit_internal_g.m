@@ -58,6 +58,12 @@ classdef conduit_internal_g
    function obj = update(obj,U)
        obj.u = U;
    end
+   
+   function [cmax, hmin] = getCFL(obj)
+        % get min(c) and max(dz) for CFL condition.
+        cmax = max(obj.M.c);
+        hmin  = min([obj.geom.dz]);
+    end
     
     function dim = dimensions(obj)
         % dimension for vz, pz, h, hL.

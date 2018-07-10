@@ -27,8 +27,9 @@ Mc.with_exsolution = false;
 Mc.rho = 1200 * ones(Mc.nz+1, 1);
 Mc.c    = 1800 * ones(Mc.nz+1, 1);
 Mc.K    = Mc.rho.*Mc.c.^2;
+Mc.variables = {'vz','pz','h'};
 
-Mc.pT.A = 5e3; % pressure perturbation amplitude
+Mc.pT.A = 1e4; % pressure perturbation amplitude
 Mc.pT.T = 0.25; % pressure perturbation duration
 Mc.pT.t = 2; % pressure perturbation center time
 Mc.G = @(t) Mc.pT.A*exp(-0.5*((t-Mc.pT.t)/Mc.pT.T)^2); % external force from the conduit.
@@ -38,9 +39,9 @@ Mc.G = @(t) Mc.pT.A*exp(-0.5*((t-Mc.pT.t)/Mc.pT.T)^2); % external force from the
 Mf.w0 = 2;
 Mf.Lx   = 2e3;
 Mf.Ly   = 2e3;
-Mf.nx = 32;
-Mf.ny = 32;
-Mf.nz = 6;
+Mf.nx = 50;
+Mf.ny = 50;
+Mf.nz = 20;
 Mf.order = 2;
 Mf.interp_order = 4;
 Mf.xs = 0.75*Mf.Lx;
@@ -53,11 +54,13 @@ Mf.isrigid = false;
 Mf.r_g  =  0.3;% ratio of grid points in boundary layer.
 Mf.r_bl =  0.15; % estimated ration of boundary layer.
 
+Mf.variables = {'pxy','vx','vy'};
+
 % fluid and solid properties.
 Mf.rho = Mc.rho(1);
 Mf.c    = Mc.c(1);
 Mf.K    = Mf.rho*Mf.c^2;
-Mf.mu = 0;
+Mf.mu = 20;
 
 Mf.cp    = 5e3;
 Mf.cs    = 2.7e3;
@@ -131,7 +134,8 @@ for i=1:nt
             if mod(i,skip) == 0
                 itr = itr+1;
                 %plot solution.
-                [vz, pz, nz, ~, p_mat, vx_mat, ~] = Model.fields(Model.u);
+%                 [vz, pz, nz, ~, p_mat, vx_mat, ~] = Model.fields(Model.u);
+                 [vz, pz, ~, p_mat, vx_mat, ~] = Model.fields(Model.u);
                 uz = Model.cond.op.W2*Model.field(Model.u, [1, 1]);
                 
                 rm = Model.cond.geom.rm;

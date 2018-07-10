@@ -65,6 +65,14 @@ classdef coupledModel
         end
     end
     
+    function [cmax, hmin] = getCFL(obj)
+            % get min(c) and max(dz) for CFL condition.
+            [cmax_cond, hmin_cond] = obj.conduit.getCFL();
+            [cmax_frac, hmin_frac] = obj.frac.getCFL();
+            cmax = max([cmax_cond, cmax_frac]);
+            hmin = min([hmin_cond, hmin_frac]);
+        end
+    
         function varargout = fields(obj, U)
             vars_conduit = length(obj.conduit.dimensions());
             vars_crack    = length(obj.frac.dimensions());
