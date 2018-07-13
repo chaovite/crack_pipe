@@ -78,7 +78,7 @@ Model = coupledModel_NoMatrix(Mc, Mf);
 %% time stepping:
 CFL = 0.5;
 % skip = 40;
-T = 20;
+T = 10;
 use_imex = true;
 plot_simu = false;
 
@@ -242,10 +242,3 @@ end
 t_Us = [0:nt]*dt;
 save_path = sprintf('%s/data_Us.mat', save_folder);
 save(save_path, 'Us','t_Us');
-
-
-
-
-
-
-

@@ -111,7 +111,7 @@ classdef conduit_internal_g
         
         % potential energy from gravity (two contribution, internal and surface)
         Epg = 0.5 * epsilon*rho(end)*g*(hL'*hL)*S(end, end) + ...
-                  0.5 * h'*spdiags(g*rho*Mg, 0, nz, nz)*h; 
+                  0.5 * h'*spdiags(g*rho.*Mg.*S, 0, nz, nz)*Hz*h; 
         
         % potential energy from fluid compressibility.
         Epc = 0.5 * pz'*spdiags(S./K, 0, nz, nz)*Hz*pz;
@@ -130,8 +130,12 @@ classdef conduit_internal_g
         D1r2 = obj.op.D1r2;
         dvz   =  D1r2*vz;
         
-        if length(obj.M.mu)==1
-            mu = ones(nz, 1)*obj.M.mu;
+        mu = obj.M.mu;
+        
+        if length(mu)==1
+            mu = ones(nz, 1)*mu;
+        else
+            
         end
         
         MU    =  spdiags(mu, 0, nz, nz);
