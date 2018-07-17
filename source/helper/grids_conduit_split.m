@@ -1,4 +1,4 @@
-function [g, op] = grids_conduit_split(nr, R, nz, L, ind, order)
+function [g, op] = grids_conduit_split(nr, R, nz, L, ind, order, order_r)
 % construct the grid for the conduit with material interface splitting.
 % ind: the grid point index to be 
 % grid is straggered in r direction but standard in z direction.
@@ -18,7 +18,7 @@ end
 dz = L/nz;
 dr = R/nr;
 truncate = 1;
-[rp,rm,Pp,Pm,Qp,Qm] = sbp_staggered_strong(order,nr, dr, truncate);
+[rp,rm,Pp,Pm,Qp,Qm] = sbp_staggered_strong(order_r,nr, dr, truncate);
 
 nz1 = ind - 1;
 nz2 = nz - nz1;

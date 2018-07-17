@@ -31,7 +31,7 @@ classdef frac3d
                 M.isrigid = false;
             end
             % construct the grid.
-            [obj.geom, obj.op] = grids_frac3d(M.nx,M.ny,M.nz, M.Lx, M.Ly, M.w0, M.order, 'strong',M.r_g, M.r_bl);
+            [obj.geom, obj.op] = grids_frac3d(M.nx,M.ny,M.nz, M.Lx, M.Ly, M.w0, M.order, 'strong',M.r_g, M.r_bl, M.order_z);
             
             tic;
             disp('creating disloc3d model....');

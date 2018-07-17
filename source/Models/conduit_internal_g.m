@@ -25,11 +25,11 @@ classdef conduit_internal_g
       %construct grid and operators
       if ~ isfield(M,'interface_split') || ~M.interface_split
           [obj.geom, obj.op] = grids_conduit(M.nr, M.R, ...
-                                             M.nz, M.L, M.order);
+                                             M.nz, M.L, M.order, M.order_r);
       else
           if isfield(M, 'split_index')
               [obj.geom, obj.op] = grids_conduit_split(M.nr, M.R, ...
-                                                 M.nz, M.L, M.split_index, M.order);
+                                                 M.nz, M.L, M.split_index, M.order, M.order_r);
           else
               error('Please specify split index');
           end

@@ -1,4 +1,4 @@
-function [g, op] = grids_frac3d(nx,ny,nz, Lx, Ly, Lz, order, operator_type, r_g, r_bl)
+function [g, op] = grids_frac3d(nx,ny,nz, Lx, Ly, Lz, order, operator_type, r_g, r_bl, order_z)
 % construct grid and operators for 3d fracture, grouped by unknowns, p, vx, vy, ux, uy.
 % r_g, r_bl are grid stretching parameters in z direction.
 %
@@ -30,7 +30,7 @@ end
 %% ******************************construct Jacobian in z direction*************************************
 
 % weak operators are used to construct the Jacobian.
-[zp, zm, Pzp, Pzm, Qzp, Qzm] = sbp_staggered_weak(order,nz,Lz/nz);
+[zp, zm, Pzp, Pzm, Qzp, Qzm] = sbp_staggered_weak(order_z,nz,Lz/nz);
 % Dzp = inv(Pzp)*Qzp;
 % Dzm = inv(Pzm)*Qzm;
 
@@ -66,11 +66,11 @@ switch operator_type
     case 'weak'
         [xp, xm, Pxp, Pxm, Qxp, Qxm] = sbp_staggered_weak(order,nx,Lx/nx);
         [yp, ym, Pyp, Pym, Qyp, Qym] = sbp_staggered_weak(order,ny,Ly/ny);
-        [~, ~, Pzp, Pzm, Qzp, Qzm] = sbp_staggered_weak(order,nz,Lz/nz);
+        [~, ~, Pzp, Pzm, Qzp, Qzm] = sbp_staggered_weak(order_z,nz,Lz/nz);
     case 'strong'
         [xp, xm, Pxp, Pxm, Qxp, Qxm] = sbp_staggered_strong(order,nx,Lx/nx,true);
         [yp, ym, Pyp, Pym, Qyp, Qym] = sbp_staggered_strong(order,ny,Ly/ny,true);
-        [~, ~, Pzp, Pzm, Qzp, Qzm]   = sbp_staggered_strong(order,nz,Lz/nz, true);
+        [~, ~, Pzp, Pzm, Qzp, Qzm]   = sbp_staggered_strong(order_z,nz,Lz/nz, true);
 end
 xp = xp'; xm = xm';
 yp = yp'; ym = ym';

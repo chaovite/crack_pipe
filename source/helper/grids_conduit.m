@@ -1,10 +1,10 @@
-function [g, op] = grids_conduit(nr, R, nz, L, order)
+function [g, op] = grids_conduit(nr, R, nz, L, order, order_r)
 % construct the grid for the conduit. 
 % grid is straggered in r direction but standard in z direction.
 dz = L/nz;
 dr = R/nr;
 truncate = 1;
-[rp,rm,Pp,Pm,Qp,Qm] = sbp_staggered_strong(order,nr, dr, truncate);
+[rp,rm,Pp,Pm,Qp,Qm] = sbp_staggered_strong(order_r,nr, dr, truncate);
 [Pz_inv, Dz] = sbp_sparse(order,nz,dz);
 Pz = inv(Pz_inv);
 
