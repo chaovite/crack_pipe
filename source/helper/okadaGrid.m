@@ -136,12 +136,13 @@ obs_ym = [xq(:)'; yq(:)'-1; zeros(1, Nq)]; % y + 1
 [Gtrans_ym, ~, ~, ~] = disloc3d(mdls, obs_ym, mu, nu);
 
 Gtilt = zeros(Nq*3, 1);
+Gtrans = reshape(Gtrans , Nq*3,1);
 
 % compute tilt using 2nd order central difference.
 % tilt in x direction.
-Gtilt(1:3:end, :) =  (Gtrans_xp(1:3:end, :) - Gtrans_xm(1:3:end, :))/2;
+Gtilt(1:3:end, :) =  (Gtrans_xp(3:3:end, :) - Gtrans_xm(3:3:end, :))/2;
 % tilt in y direction.
-Gtilt(2:3:end, :) = (Gtrans_yp(2:3:end, :) - Gtrans_ym(2:3:end, :))/2;
+Gtilt(2:3:end, :) = (Gtrans_yp(3:3:end, :) - Gtrans_ym(3:3:end, :))/2;
 
 %% plot the fault geometry and opening distribution if enabled.
 if plot_geometry
