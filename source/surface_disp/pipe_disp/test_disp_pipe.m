@@ -10,25 +10,23 @@
 % displacement point upward.
 
 model='close_pipe'; % model 'open_pipe' or 'close pipe'
-N_st=100; % number of station
+N_st=1000; % number of station
 N_z=100; % number of grid points in z direction
-R=20; % conduit radius
-c1 =0 ; % depth 1
+R=5; % conduit radius
+c1 = R; % depth 1
 c2 = 20*R; % depth 2
 P=1e4; % magnitude pressure
 pipe_loc=[0 0]'; % conduit location
 x=zeros(1,N_st); % x coordinates (East)
-y = linspace(R,10*R,N_st); %y coordinates (North)
+y = linspace(0.1*R,10*R,N_st); %y coordinates (North)
 station_loc = [x; y]; % station location
 p=P*ones(1,N_z)'; % pressure along the depth
 z = linspace(c1,c2,N_z)';% depth of each grid point
 mu = 1e10; % shear modulus
 nu = 0.25; % Poisson's ratio
 
-
 %%  calculate solution from numeric integration
-U = disp_pipe( pipe_loc, station_loc, p, z, R, mu, nu, model);
-
+[U, T]= disp_pipe( pipe_loc, station_loc, p, z, R, mu, nu, model);
 %% calculate the solution from analytic integration from equation given by 
 
 % close_pipe
@@ -46,6 +44,10 @@ switch model
 
         U3 =- m* (   2*(1-2*nu).*(1./r2-1./r1) ... 
                            -n*(3-2*nu).*(1./r2-1./r1) + n * (a.^2./r2.^3 - a.^2./r1.^3)   );
+                       
+        % tilt
+        T1 = -m*x.*(1./r2.^3.*(n*(5-2*nu) -2 + 4*nu - 3*n*a.^2./r2.^2)  -  1./r1.^3.*(n*(5-2*nu) -2 + 4*nu - 3*n*a.^2./r1.^2));
+        T2 = -m*y.*(1./r2.^3.*(n*(5-2*nu) -2 + 4*nu - 3*n*a.^2./r2.^2)  -  1./r1.^3.*(n*(5-2*nu) -2 + 4*nu - 3*n*a.^2./r1.^2));
     case 'open_pipe'
         %equation (11a) and (11b), page 10,535
         m =  P/mu*R^2;
@@ -56,11 +58,15 @@ switch model
                  - (1/2*c2^3./(a.^2.*r2.^3)-1/2*c1^3./(a.^2.*r1.^3)));
              
         U3 = -m* (   (2*nu-1)/2.*(1./r2-1./r1) ... 
-                           + 1/2 * (a.^2./r2.^3 - a.^2./r1.^3)   );       
+                           + 1/2 * (a.^2./r2.^3 - a.^2./r1.^3)   );   
+                       
+       % tilt
+       T1  = -m * x.* (1./r2.^3.*(3/2-nu - 3*a.^2./2./r2.^2) - 1./r1.^3.*(3/2-nu - 3*a.^2./2./r1.^2));
+       T2  = -m * y.* (1./r2.^3.*(3/2-nu - 3*a.^2./2./r2.^2) - 1./r1.^3.*(3/2-nu - 3*a.^2./2./r1.^2));
 end
 
-               
 %% compare results from numeric integration to analytic results to make sure the implementation is corrrect
+figure(1);
 plot(y/R,U(2,:)*1e6,'r',y/R,U(3,:)*1e6,'b',y/R,U2*1e6,'r*',y/R,U3*1e6,'b*');
 %  ylim([-4,4])
 h = legend({'radial numeric','up numeric','radia analytic','up analytic'});
@@ -69,3 +75,9 @@ xlabel('distance / R','fontsize',18);
 ylabel('Displacement (\mum)','fontsize',18);
 set(gca,'fontsize',18);
 shg
+
+figure(2);
+plot(y/R,T(2,:)*1e6,'r', y/R, T2*1e6,'k.');
+xlabel('distance / R','fontsize',18);
+ylabel('Tilt (micron)','fontsize',18);
+set(gca,'fontsize',18);

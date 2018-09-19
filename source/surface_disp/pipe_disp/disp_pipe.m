@@ -1,9 +1,11 @@
-function U = disp_pipe( pipe_loc, station_loc, p, z, R, mu, nu, model)
-%U = disp_pipe( pipe_loc, station_loc, p, z, R, mu, nu)
-%   U = disp_pipe( pipe_loc, station_loc, p, z, R, mu, nu) calculates the
+function [U, T] = disp_pipe( pipe_loc, station_loc, p, z, R, mu, nu, model)
+%[U, T]= disp_pipe( pipe_loc, station_loc, p, z, R, mu, nu)
+%   [U, T] = disp_pipe( pipe_loc, station_loc, p, z, R, mu, nu) calculates the
 %   surface displacement U(1), U(2), U(3) (East, North, Up) from
 %   a pressurized vertical conduit or pipe with depth varying pressure
-%   distribution. The receiver locations are defined in station_loc.
+%   distribution. T(1), T(2) are the tilt components, east, north.
+%   The receiver locations are defined in station_loc.
+%  
 %
 %Input:
 %     pipe_loc      : vector of dimension [2,1], horizontal coordinates: East,
@@ -19,6 +21,7 @@ function U = disp_pipe( pipe_loc, station_loc, p, z, R, mu, nu, model)
 %
 %Output:
 %     U                : surface displacement U(1), U(2), U(3) (East, North, Up), Dimension [3,N]
+%     T                : surface tilt T(1), t(2) (East, North), Dimension [2,N]
 %
 %
 % This function is based on the paper Bonaccorso and Davis (1999):
@@ -29,7 +32,8 @@ function U = disp_pipe( pipe_loc, station_loc, p, z, R, mu, nu, model)
 %       JGR, VOL 104, NO.B5, PAGES 10,531-10,542, MAY 10, 1990
 %
 %Implemented by: CHAO LIANG, NOV. 24, 2015,@ Stanford University
-%
+%Modified by: CHAO LIANG, SEP. 19, 2018,@Stanford University, implementing
+%tilt.
 %
 %Example: Please run test_disp_pipe.m to see the comparison of numeric
 %                integration and analytic solution.
@@ -77,12 +81,12 @@ x = station_loc;
 x(1,:) = x(1,:) - pipe_loc(1);% Dimension [1 N]
 x(2,:) = x(2,:) - pipe_loc(2);% Dimension [1 N]
 
-U = zeros(3,N);
+U = zeros(3,N); % displacements
+T = zeros(2,N); % tilts.
 
 % loop over stations
-
 for i=1:N;
-     x_i = x(:,i); %coordinate of the i-th station
+     x_i = x(:,i); %coordinate of the i-th station [2, 1].
      r_i  = sqrt(x_i(1).^2 + x_i(2).^2 + z_c.^2);% distance from the station to source
      
      % loop over displacement components
@@ -115,9 +119,20 @@ for i=1:N;
                      U(3,i)= -U(3,i);% different sign notation from the paper for vertical component
              end
      end
+     
+     % calculate tilt.
+     for j = 1: 2
+         d_ujj3_dxi    = 3*(1-2*nu)/(2*pi*mu)*z_c./r_i.^4*x_i(j)./r_i;
+         d_u333_dxi  = z_c./(4*pi*mu).*(5*3*z_c.^2./(r_i.^7) - 3*2*nu./(r_i.^5)).*x_i(j);
+         switch model
+             case 'open_pipe'
+                 T(j,i)  = 2*pi*sum(R_c.^2.*p_c.*(1/(1-2*nu)*d_ujj3_dxi - d_u333_dxi ).*dz);
+             case 'close_pipe'
+                 T(j,i)  = 3*pi*sum(R_c.^2.*p_c.*(d_ujj3_dxi - 1/3*d_u333_dxi).*dz);
+         end
+         T(j,i) = -T(j,i); % different sign notation for vertical component.
+     end
 end
-
-
 
 end
 
