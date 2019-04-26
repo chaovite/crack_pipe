@@ -1,12 +1,10 @@
-%coupled_simulation_frac3d
+%coupled_simulation_internal_g_frac3d
+clear
+source = '../source';
+addpath(genpath(source));
 
 %% Model parameters.
 % conduit parameters
-% change to two section pipe model.
-%
-source = '../source';
-addpath(genpath(source));
-%%
 
 sourcedir = '../source';
 addpath(genpath(sourcedir));
@@ -15,7 +13,8 @@ Mc.R  = 5;
 Mc.L   = 300; 
 Mc.nz = 20; 
 Mc.nr = 16; 
-Mc.order = 6;
+Mc.order = 6; % order of accuracy in z direction
+Mc.order_r = 6; % order of accuracy in r direction
 Mc.S = pi*Mc.R^2*ones(Mc.nz+1, 1); 
 Mc.g = 10;  
 Mc.with_exsolution=false;
@@ -35,7 +34,7 @@ Mc.K    = Mc.rho.*Mc.c.^2;
 Mc.Mg = alpha - Mc.rho*Mc.g./Mc.K;
 
 %%
-Mc.epsilon = 0;
+Mc.epsilon = 0; % ratio between 
 Mc.pT.A = 2e5; % pressure perturbation amplitude
 Mc.pT.T = 1; % pressure perturbation duration
 Mc.pT.t  = 5; % pressure perturbation center time
@@ -49,6 +48,7 @@ Mf.nx   = 32;
 Mf.ny   = 32;
 Mf.nz   = 16;
 Mf.order = 6;
+Mf.order_z = 6;
 Mf.interp_order = 6;
 Mf.xs = 0.5*Mf.Lx;
 Mf.ys = 0.5*Mf.Ly;
@@ -79,14 +79,16 @@ Mf.Yc = 500;
 Mf.Zc = 1000;
 Mf.strike = 0;
 Mf.dip     = 0;
+xq = 0;
+yq = 1000;
 %% construct coupled models.
 cond = conduit_internal_g(Mc);
 frac = frac3d_o(Mf);
 Model = coupledModel(cond, frac);
 %% time domain simulation.
 CFL = 0.5;
-skip = 50;
-T = 2;
+skip = 20;
+T = 10;
 use_imex = true;
 plot_simu = true;
 
@@ -98,7 +100,7 @@ nt = ceil(T/dt);
 %% fields to be stored.
 nkeep   = floor(nt/skip);
 time      = [skip:skip:nt]*dt;
-Us         = zeros(3*length(para.xq), nt);
+Us         = zeros(3*length(xq), nt);
 %%
 if ~ use_imex
     A = Model.Ae + Model.Ai;
@@ -109,7 +111,7 @@ end
 
 fun = @(u,t) A*u + Model.Fp(:,1)*Model.conduit.M.G(t) + Model.Fp(:,2)*Model.frac.M.G(t);
 tic
-Hp = Model.get_Hp(para.xq, para.yq);
+Hp = Model.get_Hp(xq, yq);
 
 for i=1:nt
     t = (i-1)*dt;
@@ -168,46 +170,7 @@ for i=1:nt
         [Z_vxm, X_vxm] = meshgrid(Model.frac.geom.vx.x, Model.frac.geom.vx.z); %[nz, nx]
         vy_m = squeeze(vy(:,:,vy_xmid)); %[nz, ny]
         [Z_vym, Y_vym] = meshgrid(Model.frac.geom.vy.y, Model.frac.geom.vy.z);%[nz, ny]
-        
-%         pzs{iter,1}       = pz;
-%         vzs{iter,1}       = vz;
-%         uzs{iter,1}       = uz;
-%         pxys{iter,1}     = pxy;
-%         vx_ms{iter,1}  = vx_ms;
-%         uxs{iter,1}       = ux;
-        
-        % save the data in d structure.
-%         d.time = time;
-% 
-%         % fields in the pipe.
-%         d.nr = nr;
-%         d.nz = nz;
-%         d.z   = z;
-%         d.rm = rm;
-% 
-%         d.pzs = pzs;
-%         d.vzs = vzs;
-%         d.uzs = uzs;
-% 
-%         % fields in the crack.
-%         % save pxys
-%         d.X_pxy = X_pxy;
-%         d.Y_pxy = Y_pxy;
-%         d.pxys = pxys;
-% 
-%         % save uxs
-%         d.X_ux = X_ux;
-%         d.Y_ux = Y_ux;
-%         d.uxs   = uxs;
-% 
-%         % save vxm
-%         d.Z_vxm = Z_vxm;
-%         d.X_vxm = X_vxm;
-%         d.vx_ms = vx_ms;
-% 
-%         d.Mc = Mc;
-%         d.Mf  = Mf;
-%         save(['data',num2str(iter)],'d');
+
         time_i = i*dt;
         if plot_simu
             % plot the crack.

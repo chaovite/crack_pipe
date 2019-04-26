@@ -1,3 +1,5 @@
+%!! really old stuff. don't use.
+
 source_dir = '../source';
 addpath(genpath(source_dir));
 %% Simulation settings

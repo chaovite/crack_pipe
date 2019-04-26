@@ -1,4 +1,11 @@
 % pipe_crack_flow_driver, multi-section pipe model coupled to multiple cracks.
+%
+% this model does account for the gravity effect caused by jump in density
+% in the conduit.
+%
+% boundary condition at the top of the conduit.
+%
+
 source_dir = '../source';
 addpath(genpath(source_dir));
 %%
@@ -6,7 +13,7 @@ addpath(genpath(source_dir));
 clear
 % three section pipe. [0 200], [200, 400], [400, 1000]
 Mp.name  = 'pipe';
-Mp.L         = [100, 100, 100];        % length
+Mp.L         = [200, 200, 200];        % length
 
 % radius does not vary in depth for now.
 Mp.R         = [20];                                         % radius

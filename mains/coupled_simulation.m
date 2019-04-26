@@ -1,14 +1,15 @@
 % coupled conduit and bottom crack wave simulation
+clear
 source_dir = '../source';
 addpath(genpath(source_dir));
 %%
-clear
 % conduit parameters
 Mc.R = 20;
 Mc.L = 1000;
 Mc.nz = 100;
 Mc.nr = 50;
 Mc.order = 6;
+Mc.order_r = 6;
 Mc.S = pi*Mc.R^2;
 Mc.g = 10;
 Mc.mu = 50;
@@ -43,13 +44,7 @@ end
 Mc.pT.A = 1e4; % pressure perturbation amplitude
 Mc.pT.T = 0.5; % pressure perturbation duration
 Mc.pT.t = 2; % pressure perturbation center time
-
-Mc.G = @(t) Mc.pT.A*exp(-0.5*((t-Mc.pT.t)/Mc.pT.T)^2); % external force from the conduit.
-% Mc.pT.f   = 0.25; % ricker wavelet central frequency.
-% change external forcing to be ricker wavelet.
-% Mc.G = @(t) ricker(t, Mc.pT.f, Mc.pT.t)*Mc.pT.A;
-
-% Mc.G = @(t) 0; % external force from the conduit.
+Mc.G = @(t) Mc.pT.A*exp(-0.5*((t-Mc.pT.t)/Mc.pT.T)^2); % external force from the conduit (external pressure)
 
 % fluid-filled fracture parameters.
 Mf.w0 = 1.5;
@@ -60,12 +55,11 @@ Mf.order = 6;
 Mf.interp_order = 4;
 Mf.xs = 0*Mf.L;
 % Mf.G  = @(t) 5e4/(Mc.c(1)*Mc.rho(1))*ricker(t, 1, 2); % no external forcing in the crack.
-% Mf.G  = @(t) 1e5/(Mf.c*Mf.rho)*exp(-0.5*((t-Mc.pT.t)/Mc.pT.T)^2)
-Mf.G  = @(t) 0;
+Mf.G  = @(t) 0; % external forcing in the crack (point source injection)
 Mf.xc = 0.5*Mf.L;% the coupling location to the conduit.
 
 Mf.lc  = 50;%coupling length scale.
-Mf.Lz = Mf.L; % length of crack in the out-of-plane direction.
+Mf.Lz = Mf.L; % length of crack in the out-of-plane direction. 2D plane strain crack.
 Mf.Xc = 0;
 Mf.Yc = 0;
 Mf.Zc = 1000;
@@ -93,8 +87,8 @@ Mf.nu  = ((Mf.cp/Mf.cs)^2-2)/((Mf.cp/Mf.cs)^2-1)/2;
 x_obs = 0;
 y_obs = 1000;
 %% construct coupled models.
-frac = frac2d(Mf);
-cond = conduit(Mc);
+frac = frac2d(Mf); % 2d crack with 1 length dimension, 1 width dimension, resolve viscous boundary layer.
+cond = conduit(Mc); % 2d radially symmetric conduit.
 %%
 Model = coupledModel(cond, frac);
 %% time stepping:
@@ -155,64 +149,58 @@ for i=1:nt
             xp  = Model.frac.geom.p.x;
             
             %fracture
-%             figure(1);
-%             subplot(3,1,1);
-%             pcolor(xm, ym, vx);
-%             xlabel('x'); ylabel('y');
-%             cmap;
-%             caxis([-2.5e-1 2.5e-1]);
-%             shading INTERP;
-%             title(sprintf('t=%f',t));
-%             xlim([0 Model.frac.M.L]);
-%             
-%             subplot(3,1,2);
-%             plot(xm, vx(round(size(vx,1)/2), :)');
-%             xlabel('x');
-%             ylabel('v');
-%             ylim([-2.5e-1 2.5e-1]);
-%             xlim([0 Model.frac.M.L]);
-%             
-%             subplot(3,1,3);
-%             plot(xp, px);
-%             xlabel('x');
-%             ylabel('p');
-%             ylim([-10e4, 10e4]);
-%             xlim([0 Model.frac.M.L]);
+            figure(1);
+            subplot(3,1,1);
+            pcolor(xm, ym, vx);
+            xlabel('x'); ylabel('y');
+            cmap;
+            caxis([-2.5e-1 2.5e-1]);
+            shading INTERP;
+            title(sprintf('t=%f',t));
+            xlim([0 Model.frac.M.L]);
+            
+            subplot(3,1,2);
+            plot(xm, vx(round(size(vx,1)/2), :)');
+            xlabel('x');
+            ylabel('v');
+            ylim([-2.5e-1 2.5e-1]);
+            xlim([0 Model.frac.M.L]);
+            
+            subplot(3,1,3);
+            plot(xp, px);
+            xlabel('x');
+            ylabel('p');
+            ylim([-10e4, 10e4]);
+            xlim([0 Model.frac.M.L]);
             
             % plot the surface displacement vertical component.
-%             figure(2);
+            figure(2);
             plot([1:i]*dt, Us(3,1:i),'-k');
             xlim([0 T]);xlabel('time (s)');ylabel('Uz');
             ylim([-10e-5, 10e-5]);
             grid on;
             drawnow;
             
-            %conduit.
-%             figure(3);
-%             subplot(1,3,1)
-%             pcolor(rm, z, vz');
-%             shading INTERP;
-%             cmap;
-%             caxis([-5e-2 5e-2])
-%             xlabel('r (m)'), ylabel('z (m)')
-%             
-%             subplot(1,3,2)
-%             plot(uz, z);
-%             xlim([-5e-2, 5e-2])
-%             ylim([0 Model.conduit.M.L])
-%             xlabel('u'), ylabel('z (m)')
-%             
-%             subplot(1,3,3)
-%             plot(pz, z);
-%             xlim([-5e4,5e4]);
-%             ylim([0 Model.conduit.M.L])
-%             xlabel('p'), ylabel('z (m)')
+%             conduit.
+            figure(3);
+            subplot(1,3,1)
+            pcolor(rm, z, vz');
+            shading INTERP;
+            cmap;
+            caxis([-5e-2 5e-2])
+            xlabel('r (m)'), ylabel('z (m)')
             
-%             subplot(1,4,4)
-%             plot(nz, z)
-%             xlim([-1e-5, 1e-5]);
-%             ylim([0 Model.conduit.M.L])
-%             xlabel('n'), ylabel('z (m)');
+            subplot(1,3,2)
+            plot(uz, z);
+            xlim([-5e-2, 5e-2])
+            ylim([0 Model.conduit.M.L])
+            xlabel('u'), ylabel('z (m)')
+            
+            subplot(1,3,3)
+            plot(pz, z);
+            xlim([-5e4,5e4]);
+            ylim([0 Model.conduit.M.L])
+            xlabel('p'), ylabel('z (m)')
             drawnow;
             
         end

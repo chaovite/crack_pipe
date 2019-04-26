@@ -1,4 +1,7 @@
 % coupled conduit and bottom crack wave simulation
+
+% This script is used do some development, can be messy.
+clear
 source_dir = '../source';
 addpath(genpath(source_dir));
 %%
@@ -9,6 +12,7 @@ Mc.L = 1000;
 Mc.nz = 40;
 Mc.nr = 20;
 Mc.order = 2;
+Mc.order_r = 2;
 Mc.S = pi*Mc.R^2;
 Mc.g = 10;
 Mc.mu = 0;
@@ -43,6 +47,7 @@ Mf.nx = 50;
 Mf.ny = 50;
 Mf.nz = 20;
 Mf.order = 2;
+Mf.order_z = 2;
 Mf.interp_order = 4;
 Mf.xs = 0.75*Mf.Lx;
 Mf.ys = 0.5*Mf.Ly;

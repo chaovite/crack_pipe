@@ -1,11 +1,12 @@
-% 3D crack wave simulation
+% 1D crack wave simulation with Poiseuille's flow assumption
+clear
 addpath(genpath('../source'))
 %%
 clear
 % fluid-filled fracture parameters.
-Mf.w0   = 1;
+Mf.w0   = 10;
 Mf.Lx   = 2000;
-Mf.nx = 50;
+Mf.nx = 100;
 Mf.order = 4;
 Mf.interp_order = 4;
 
@@ -16,7 +17,7 @@ Mf.source.pT.A = 100;
 Mf.source.pT.f0 = 1;
 Mf.source.pT.t0 = 2/Mf.source.pT.f0;
 % Mf.source.G  = @(t) Mf.source.pT.A*ricker(t, 5, 2/5);
-Mf.source.G  = @(t) Mf.source.pT.A*ricker(t, 0.1, 2/0.1);
+Mf.source.G  = @(t) Mf.source.pT.A*ricker(t, Mf.source.pT.f0, Mf.source.pT.t0);
 % Mf.xc = 0.5*Mf.Lx;% the coupling location to the conduit.
 
 % boundary condition. pressure at x=0, zero velocity at x=L;
@@ -36,7 +37,7 @@ Mf.bc.vn.G = @(t) 0;
 Mf.rho = 1.8e3;
 Mf.c    = 2.5e3;
 Mf.K    = Mf.rho*Mf.c^2;
-Mf.mu = 0;
+Mf.mu = 50;
 Mf.cp    = 5e3;
 Mf.cs    = 2.7e3;
 Mf.rhos = 3e3;

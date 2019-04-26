@@ -1,14 +1,19 @@
 % coupled conduit and bottom crack wave simulation
 
+% this simulation utilize coupledModel_NoMatrix model, which avoid
+% assembling large matrix, which accelerates the time domain simulation.
+
+clear
 % use absolute path if working on the cluster.
 source_dir = '../source';
 addpath(genpath(source_dir));
 %%
 Mc.R  = 5;
 Mc.L   = 300;
-Mc.nz = 20;
-Mc.nr = 30;
+Mc.nz = 30;
+Mc.nr = 20;
 Mc.order = 6;
+Mc.order_r = 6; %order accuracy in the r direction.
 Mc.S = pi*Mc.R^2*ones(Mc.nz+1, 1);
 Mc.g = 10;
 Mc.with_exsolution=false;
@@ -36,10 +41,11 @@ Mc.G         = @(t) Mc.pT.A*exp(-0.5*((t-Mc.pT.t)/Mc.pT.T)^2); % external force 
 Mf.w0   =  4;
 Mf.Lx   = 2000;
 Mf.Ly   = 2000;
-Mf.nx   = 50;
-Mf.ny   = 50;
-Mf.nz   = 50;
+Mf.nx   = 30;
+Mf.ny   = 30;
+Mf.nz   = 30;
 Mf.order = 6;
+Mf.order_z = 6;
 Mf.interp_order = 6;
 Mf.xs = 0.5*Mf.Lx;
 Mf.ys = 0.5*Mf.Ly;
@@ -80,7 +86,7 @@ CFL = 0.5;
 % skip = 40;
 T = 10;
 use_imex = true;
-plot_simu = false;
+plot_simu = true;
 
 % time stepping
 [cmax, hmin] = Model.getCFL();
@@ -88,11 +94,11 @@ dt = CFL*hmin/cmax;
 nt = ceil(T/dt);
 
 % number of frames to keep.
-nkeep  = 5;
+nkeep  = 200;
 skip     = floor(nt/nkeep);
 
 % put the absolute path of the savefolder if working on the cluster.
-save_folder = '/Users/Chaovite/Documents/data/time_simulation3d/time_simu_internal_g'; 
+% save_folder = '/Users/Chaovite/Documents/data/time_simulation3d/time_simu_internal_g'; 
 
 if ~ use_imex
     fun = @(u, t) Model.ft(u,t) + Model.Ai*u;
@@ -170,8 +176,8 @@ for i=1:nt
         d.w0 = Model.frac.M.w0;
         d.L   = Model.cond.M.L;
         d.R  = Model.cond.M.R;
-        save_path = sprintf('%s/data_frame_%d.mat', save_folder, itr);
-        save(save_path, 'd');
+%         save_path = sprintf('%s/data_frame_%d.mat', save_folder, itr);
+%         save(save_path, 'd');
         
         % plot solution.
         if plot_simu
@@ -240,5 +246,5 @@ end
 
 % save the time series of surface displacements
 t_Us = [0:nt]*dt;
-save_path = sprintf('%s/data_Us.mat', save_folder);
-save(save_path, 'Us','t_Us');
+% save_path = sprintf('%s/data_Us.mat', save_folder);
+% save(save_path, 'Us','t_Us');

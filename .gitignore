@@ -1,6 +1,7 @@
 *.png
 *.fig
 *.mat
+*.eps
 source/.ipynb_checkpoints/
 dev/
 .ipynb_checkpoints/

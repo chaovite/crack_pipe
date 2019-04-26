@@ -1,4 +1,5 @@
 % crack2d subject to distributed external loading.
+clear
 source_dir = '../source';
 addpath(genpath(source_dir));
 %%
@@ -51,11 +52,10 @@ Mf.Yc   = 0;
 Mf.Zc   = 1000 ;
 Mf.strike = 0;
 Mf.dip = 0;
-Mf.Lz  = Mf.Ly;
+Mf.Lz  = Mf.L;
 
 %
 Model = frac2d(Mf);
-
 
 %%
 CFL = 0.5;
