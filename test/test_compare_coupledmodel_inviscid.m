@@ -3,10 +3,10 @@
 % test if the frac3d+conduit and frac2dxy+pipe1d produces the same
 % solution in time domain under the limit of zero viscosity.
 %
+clear
 source_dir = '../source';
 addpath(genpath(source_dir));
 %% frac2dxy+pipe1d pipCrack solution.
-clear
 % three section pipe. [0 200], [200, 400], [400, 1000]
 Mp.name  = 'pipe';
 Mp.L         = 1000;        % length
@@ -177,6 +177,7 @@ Mc.L   = 1000;
 Mc.nz = 32;
 Mc.nr  = 6;
 Mc.order = 2;
+Mc.order_r=2;
 Mc.S = pi*Mc.R^2;
 Mc.g = 10;
 Mc.mu = 0;
@@ -200,6 +201,7 @@ Mf.nx = 32;
 Mf.ny = 32;
 Mf.nz = 4;
 Mf.order = 2;
+Mf.order_z=2;
 Mf.interp_order = 4;
 Mf.xs = 0.75*Mf.Lx;
 Mf.ys = 0.5*Mf.Ly;
@@ -227,7 +229,7 @@ Mf.Yc   = 0;
 Mf.Zc   = 1000 ;
 Mf.strike = 0;
 Mf.dip = 0;
-
+%%
 x_obs = 0;
 y_obs = 1000;
 % construct coupled models.
@@ -363,7 +365,7 @@ for i=1: nkeep
     colorbar;
     caxis([-5e3, 5e3]/2);
     title('coupledModel');
-    pause();
+    drawnow;
 end
 
 

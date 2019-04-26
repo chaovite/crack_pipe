@@ -3,6 +3,7 @@
 % test if the frac3d+conduit and frac2dxy+pipe1d produces the same
 % solution in time domain under the limit of zero viscosity.
 %
+
 source_dir = '../source';
 addpath(genpath(source_dir));
 %% frac2dxy+pipe1d pipCrack solution.
@@ -177,6 +178,7 @@ Mc.L   = 1000;
 Mc.nz = 64;
 Mc.nr  = 6;
 Mc.order = 2;
+Mc.order_r = 2;
 Mc.S = pi*Mc.R^2;
 Mc.g = 0;
 Mc.mu = 0;
@@ -200,6 +202,7 @@ Mf.nx = 32;
 Mf.ny = 32;
 Mf.nz = 16;
 Mf.order = 2;
+Mf.order_z = 2;
 Mf.interp_order = 2;
 Mf.xs = 0.75*Mf.Lx;
 Mf.ys = 0.5*Mf.Ly;

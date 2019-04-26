@@ -11,6 +11,7 @@ Mc.L = 1000;
 Mc.nz = 50; 
 Mc.nr = 50; 
 Mc.order = 6;
+Mc.order_r = 6;
 Mc.S = pi*Mc.R^2; 
 Mc.g = 10;  
 Mc.mu = 50; 

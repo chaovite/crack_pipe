@@ -1,4 +1,5 @@
 %test disloc3dGrid.
+clear;close all;
 source_dir = '../source';
 addpath(genpath(source_dir));
 %%

@@ -15,6 +15,7 @@ Mf.nx   = 64;
 Mf.ny   = 64;
 Mf.nz   = 20;
 Mf.order = 4;
+Mf.order_z = Mf.order;
 Mf.interp_order = 6;
 Mf.xs = 0.5*Mf.Lx;
 Mf.ys = 0.5*Mf.Ly;
@@ -187,6 +188,6 @@ for i = 1: nkeep
     colorbar;
 %     caxis([-1e-6, 1e-6]);
     title('frac2dxy-frac3d difference');
-    pause();
+   drawnow
 end
 

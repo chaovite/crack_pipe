@@ -77,7 +77,7 @@ p    = 1e6;       % uniform pressure 1 MPa.
 N = length(x);
 p_vec = ones(length(x),1)*p; 
 [K, K_inv] = KernelBEM2D(x, mu, nu);
-dsl_grid   = disloc2dGrid(xc, yc, zc, strike, dip, x, L, mu, nu);
+dsl_grid   = disloc2dGrid(xc, yc, zc, strike, dip, x, L*100, mu, nu);
 K_inv_dsl = dsl_grid.K_inv;
 
 w_n = K_inv*p_vec; 

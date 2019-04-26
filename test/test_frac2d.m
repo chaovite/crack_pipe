@@ -1,11 +1,13 @@
 % test the frac2d.
 % coupled conduit and bottom crack wave simulation
+clear
 source_dir = '../source';
 addpath(genpath(source_dir));
 %%
 % fluid-filled fracture parameters.
 Mf.w0 = 1; 
 Mf.L   = 1000; 
+Mf.Lz = 1000;
 Mf.nx = 20; 
 Mf.ny = 20; 
 Mf.order = 2; 
@@ -30,7 +32,14 @@ Mf.cs    = 2.7e3;
 Mf.rhos = 3e3; 
 Mf.Gs   = Mf.cs^2*Mf.rhos;
 Mf.nu  = ((Mf.cp/Mf.cs)^2-2)/((Mf.cp/Mf.cs)^2-1)/2;
+
 %
+Mf.Xc = 0;
+Mf.Yc  = 0;
+Mf.Zc =1000;
+Mf.strike =0;
+Mf.dip =0;
+
 frac = frac2d(Mf);
 
 % construct the original fluid object.

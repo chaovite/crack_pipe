@@ -5,7 +5,7 @@
 %           pz = sin(2*pi*z)*sin(2*pi*t)
 %           vz = cos(2*pi*z)*cos(2*pi*t)
 %
-
+clear
 source_dir = '../source';
 addpath(genpath(source_dir));
 
@@ -31,6 +31,7 @@ for i_order = 1: length(order)
         Mp.S         = pi*Mp.R.^2;                     % pipe surface area.
         Mp.g         = 0;                                     % gravitational acceleration
         Mp.order  = order(i_order);                % order of spatial discretization.
+        Mp.order_r = Mp.order;
         Mp.interface_split=false;
         Mp.with_exsolution = false;
         Mp.interfaces = [];

@@ -1,4 +1,5 @@
 % test rigid wall limit with no viscosity, no point source.
+clear
 source_dir = '../source';
 addpath(genpath(source_dir));
 %% Simulation settings

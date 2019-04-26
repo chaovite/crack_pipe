@@ -1,6 +1,8 @@
 % DDM2D test
 % Bench mark DDM2D to the constant pressure analytical solution.
 %
+clear;
+close all;
 source_dir = '../source';
 addpath(genpath(source_dir));
 

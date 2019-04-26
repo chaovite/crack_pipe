@@ -17,6 +17,7 @@ Mp.mu      = 50;                                     %  viscosity.
 Mp.S         = pi*Mp.R.^2;                     % pipe surface area.
 Mp.g        = 10;                                     % gravitational acceleration
 Mp.order  = 4;                % order of spatial discretization.
+Mp.order_r = 4;
 Mp.interface_split=false;
 Mp.with_exsolution = false;
 Mp.interfaces = [];

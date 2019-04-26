@@ -1,5 +1,5 @@
 % test conduit energy norm
-
+clear
 source_dir = '../source';
 addpath(genpath(source_dir));
 %%
@@ -10,6 +10,7 @@ Mc.L = 1000;
 Mc.nz = 30; 
 Mc.nr = 20; 
 Mc.order = 6;
+Mc.order_r = 6;
 Mc.S = pi*Mc.R^2; 
 Mc.g = 10;  
 Mc.mu = 50; 

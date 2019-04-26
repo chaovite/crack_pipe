@@ -3,6 +3,7 @@
 % test the new conduit model reduces to the Karlstrom and Dunham code when
 % taking Mg = 0.
 %
+clear
 
 sourcedir = '../source';
 addpath(genpath(sourcedir));
@@ -12,6 +13,7 @@ Mc.L = 1000;
 Mc.nz = 20; 
 Mc.nr = 30; 
 Mc.order = 6;
+Mc.order_r = Mc.order;
 Mc.S = pi*Mc.R^2*ones(Mc.nz+1, 1); 
 Mc.g = 10;  
 Mc.with_exsolution=false;
