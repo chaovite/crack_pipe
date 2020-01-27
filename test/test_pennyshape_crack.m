@@ -8,7 +8,7 @@ addpath(genpath(source_dir));
 addpath(genpath(mesh_dir));
 
 % load spherical mesh
-mshfile = 'sphere.msh';
+mshfile = 'sphere_refine.msh';
 % mshfile = 'sphere_refine.mesh'; %refined mesh
 
 tic;
@@ -58,18 +58,25 @@ K_inv = inv(K);
 toc
 
 %% uniform pressure
+% prescrib pressure
+close all;
 figure;
 P = ones(Ne, 1);
 U = K_inv*P;
 % plot the crack opening.
 subplot(1,3,1);
 
-trisurf(TR.ConnectivityList, TR.Points(:, 1),TR.Points(:, 2), zeros(Np,1),  U,'edgecolor','none');colorbar;
+Xs = reshape(TR.Points(TR.ConnectivityList', 1), 3, Ne);
+Ys = reshape(TR.Points(TR.ConnectivityList', 2), 3, Ne);
+
+% trisurf(TR.ConnectivityList, TR.Points(:, 1),TR.Points(:, 2), zeros(Np,1),  U,'edgecolor','none');
+patch(Xs, Ys, U);
+shading flat;
+colorbar;
 xlabel('X');
 ylabel('Y');
 title('Numerical');
 colorbar;
-view([0,0,1]);
 daspect([1,1,1])
 xlim([-0.5, 0.5]);
 ylim([-0.5, 0.5])
@@ -81,22 +88,21 @@ subplot(1,3,2);
 c    = 0.5;
 r     =  sqrt(X.^2 + Y.^2);
 Ua  = 2*4*(1-nu^2)*c*sqrt(1 - (r./c).^2)/3/pi/K0/(1-2*nu)*1;
-trisurf(TR.ConnectivityList, TR.Points(:, 1),TR.Points(:, 2), zeros(Np,1), Ua,'edgecolor','none');
+
+patch(Xs, Ys, Ua);shading flat;
 xlabel('X');
 ylabel('Y');
 title('Analytical');
-suptitle('penny-shaped crack')
+% suptitle('penny-shaped crack')
 colorbar;
 xlim([-0.5, 0.5]);
 ylim([-0.5, 0.5])
-view([0,0,1]);
 daspect([1,1,1]);
 set(gca,'fontsize',14);
 
 subplot(1,3,3);
-trisurf(TR.ConnectivityList, TR.Points(:, 1),TR.Points(:, 2), zeros(Np,1), (Ua-U)./Ua,'edgecolor','none');
+patch(Xs, Ys,  (Ua-U)./Ua);shading flat;
 colorbar;
-view([0,0,1]);
 xlim([-0.5, 0.5]);
 ylim([-0.5, 0.5])
 daspect([1,1,1]);
@@ -104,7 +110,46 @@ xlabel('X');
 ylabel('Y');
 title('Relative Diff');
 
-% axis([-0.4])
+figure;
+% prescribe opening
+P = K*Ua;
+Pa = ones(Ne,1);
+subplot(1,3,1)
+patch(Xs, Ys, P);
+shading flat;
+colorbar;
+xlabel('X');
+ylabel('Y');
+title('Numerical');
+colorbar;
+daspect([1,1,1])
+xlim([-0.5, 0.5]);
+ylim([-0.5, 0.5]);
+caxis([0,1]);
+set(gca,'fontsize',14);
 
+subplot(1,3,2);
+patch(Xs, Ys, Pa);shading flat;
+xlabel('X');
+ylabel('Y');
+title('Analytical');
+% suptitle('penny-shaped crack')
+colorbar;
+xlim([-0.5, 0.5]);
+ylim([-0.5, 0.5])
+daspect([1,1,1]);
+caxis([0,1]);
+set(gca,'fontsize',14);
+
+subplot(1,3,3);
+patch(Xs, Ys,  (Pa-P)./Pa);shading flat;
+colorbar;
+xlim([-0.5, 0.5]);
+ylim([-0.5, 0.5])
+daspect([1,1,1]);
+caxis([-0.1,0.1])
+xlabel('X');
+ylabel('Y');
+title('Relative Diff');
 
 
