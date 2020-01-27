@@ -101,10 +101,11 @@ daspect([1,1,1]);
 set(gca,'fontsize',14);
 
 subplot(1,3,3);
-patch(Xs, Ys,  (Ua-U)./Ua);shading flat;
+patch(Xs, Ys,  abs((Ua-U)./Ua));shading flat;
 colorbar;
 xlim([-0.5, 0.5]);
 ylim([-0.5, 0.5])
+caxis([0,0.05]);
 daspect([1,1,1]);
 xlabel('X');
 ylabel('Y');
@@ -142,12 +143,12 @@ caxis([0,1]);
 set(gca,'fontsize',14);
 
 subplot(1,3,3);
-patch(Xs, Ys,  (Pa-P)./Pa);shading flat;
+patch(Xs, Ys,  abs((Pa-P)./Pa));shading flat;
 colorbar;
 xlim([-0.5, 0.5]);
 ylim([-0.5, 0.5])
 daspect([1,1,1]);
-caxis([-0.1,0.1])
+caxis([0,0.1]);
 xlabel('X');
 ylabel('Y');
 title('Relative Diff');
