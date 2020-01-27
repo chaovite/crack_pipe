@@ -2,6 +2,7 @@
 *.fig
 *.mat
 *.eps
+*.msh
 source/.ipynb_checkpoints/
 dev/
 .ipynb_checkpoints/
