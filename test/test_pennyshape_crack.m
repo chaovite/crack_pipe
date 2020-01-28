@@ -56,7 +56,6 @@ K = zeros(Ne, Ne);
  
 K_inv = inv(K);
 toc
-
 %% uniform pressure
 % prescrib pressure
 close all;
@@ -152,5 +151,3 @@ caxis([0,0.1]);
 xlabel('X');
 ylabel('Y');
 title('Relative Diff');
-
-

@@ -1,7 +1,7 @@
 // Gmsh project created on Thu Jan 23 15:53:43 2020
-alpha = 1.0; // aspect ratio
-size_cc = 0.1;
-size_bc = 0.01;
+alpha   = 1; // aspect ratio
+size_cc = 0.05;
+size_bc = 0.05;
 //+
 Point(1) = {-0.5, 0, 0, 0};
 //+

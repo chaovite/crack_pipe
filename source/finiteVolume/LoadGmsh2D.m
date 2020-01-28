@@ -65,7 +65,7 @@ for i = 1: n_edges
     end
     
     c1 = C(els(1), :);
-    c2 = C(els(1), :);
+    c2 = C(els(2), :);
     
     connDist(i) =  norm(c1 - c2);
 end
