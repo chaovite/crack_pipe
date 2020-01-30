@@ -13,7 +13,6 @@ mshfile = 'sphere_refine.msh';
 
 tic;
 [edge2el, el2edge, edgeBC, transT, edge_len, connDist, TR] = LoadGmsh2D(mshfile, true);
-
 %% compute elasticity kernel
 Ne = length(el2edge);
 Np = size(TR.Points, 1);
@@ -104,7 +103,7 @@ patch(Xs, Ys,  abs((Ua-U)./Ua));shading flat;
 colorbar;
 xlim([-0.5, 0.5]);
 ylim([-0.5, 0.5])
-caxis([0,0.05]);
+caxis([0,0.1]);
 daspect([1,1,1]);
 xlabel('X');
 ylabel('Y');

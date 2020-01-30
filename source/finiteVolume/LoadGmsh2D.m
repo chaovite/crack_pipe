@@ -1,4 +1,4 @@
-function [edge2el, el2edge, edgeBC, transT, edge_len, connDist, TR] = LoadGmsh2D(file, isplot)
+function [edge2el, el2edge, edgeBC, transT, edge_len, connDist, TR, areaEl] = LoadGmsh2D(file, isplot)
 %    [edge2el, el2edge, edgeBC, transT, edge_len, connDist, TR] = LoadGmsh2D(file, isplot)
 %
 %------------------------------------------------------------------------%
@@ -11,7 +11,7 @@ if nargin<2
 end
 
 %-----------------------------------------------------------------------%
-% dlmread(filename,delimiter,[R1 C1 R2 C2]) reads only the range 
+% dlmread(filename,delimiter,[R1 C1 R2 C2]) reads only the range
 % bounded by row offsets R1 and R2 and column offsets C1 and C2.
 %-----------------------------------------------------------------------%
 %
@@ -31,11 +31,26 @@ elem_type   = elements(:,2);
 elements2d = elements(elem_type==2, 6:8);
 elements2d = sort(elements2d, 2);
 
+%-------- areaEl-------
+% compute the area of each triangle.
+
+N_e2d = size(elements2d, 1);
+
+areaEl = zeros(N_e2d, 1);
+for i = 1: N_e2d
+    v1  = [nodes2d(elements2d(i, 1), :), 0];
+    v2  = [nodes2d(elements2d(i, 2), :), 0];
+    v3  = [nodes2d(elements2d(i, 3), :), 0];
+    a    = v2 - v1;
+    b    = v3 - v1;
+    areaEl(i) = norm(cross(a, b))/2;
+end
+
 % create triangulation object
 TR = triangulation(elements2d, nodes2d);
 
 % centers of triangles.
-C = incenter(TR); 
+C = incenter(TR);
 
 % obtain all the edges
 edges2d = edges(TR);
@@ -86,10 +101,10 @@ assert(length(edgecode)==length(unique(edgecode)));
 
 edgemap(edgecode) = num2cell([1:n_edges]');
 
-N_e2d = size(elements2d, 1);
+
 el2edge = cell(N_e2d, 1);
 
-for i  = 1: N_e2d 
+for i  = 1: N_e2d
     edge_index = zeros(1, 3);
     cnt = 0;
     
@@ -98,12 +113,12 @@ for i  = 1: N_e2d
     
     for k = 1: 2
         for m = k+1: 3
-                cnt = cnt + 1;
-                n1 = elements2d(i, k); 
-                n2 = elements2d(i, m); 
-
-                c12 =  mod(n1*(N_n + 1) +  n2, 2^hashBits) + 1;% hashcode
-                edge_index(cnt) = edgemap{c12};
+            cnt = cnt + 1;
+            n1 = elements2d(i, k);
+            n2 = elements2d(i, m);
+            
+            c12 =  mod(n1*(N_n + 1) +  n2, 2^hashBits) + 1;% hashcode
+            edge_index(cnt) = edgemap{c12};
         end
         
     end
@@ -113,28 +128,27 @@ for i  = 1: N_e2d
 end
 
 if isplot
-%---- visualize in matlab ---------------------
-figure(1)
-triplot(elements2d, nodes2d(:,1),nodes2d(:,2))
-hold on;
-plot(C(:,1), C(:,2),'r.'); % cell centers
-
-% plot boundary edges
-edges_bc= edges2d(edgeBC, :);
-xs = nodes2d(edges_bc', 1);
-ys = nodes2d(edges_bc', 2);
-plot(xs, ys,'k*'); % cell centers
-hold off;
-xlabel('X','fontsize',14)
-ylabel('Y','fontsize',14)
-legend({'elements','centers','boundary'});
-title('GMsh to MATLAB import','fontsize',14);
-fh = figure(1);
-set(fh, 'color', 'white'); 
-daspect([1,1,1]);
+    %---- visualize in matlab ---------------------
+    figure(1)
+    triplot(elements2d, nodes2d(:,1),nodes2d(:,2))
+    hold on;
+    plot(C(:,1), C(:,2),'r.'); % cell centers
+    
+    % plot boundary edges
+    edges_bc= edges2d(edgeBC, :);
+    xs = nodes2d(edges_bc', 1);
+    ys = nodes2d(edges_bc', 2);
+    plot(xs, ys,'k*'); % cell centers
+    hold off;
+    xlabel('X','fontsize',14)
+    ylabel('Y','fontsize',14)
+    legend({'elements','centers','boundary'});
+    title('GMsh to MATLAB import','fontsize',14);
+    fh = figure(1);
+    set(fh, 'color', 'white');
+    daspect([1,1,1]);
 end
 
 %-------------------------------------------------------------------------
-
 end
 
